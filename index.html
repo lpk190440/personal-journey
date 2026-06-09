@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="css/style.css?v=202606100200">
+<link rel="stylesheet" href="css/style.css?v=202606110055">
 <link rel="stylesheet" href="css/os-launcher.css?v=202606100200">
 <link rel="stylesheet" href="css/ocean-theme.css?v=202606100200">
 <link rel="stylesheet" href="css/irregular-shapes.css?v=202606100200">
@@ -568,6 +568,100 @@
           <span class="tag tag-important" x-show="quickPanelResult?.priority === 'high'">重要</span>
           <span class="text-xs text-secondary" x-show="quickPanelResult?.time" x-text="quickPanelResult?.time"></span>
           <span class="text-xs text-secondary" x-show="quickPanelResult?.duration" x-text="quickPanelResult?.duration + 'min'"></span>
+        </div>
+      </div>
+
+      <!-- ===== 建议箱 ===== -->
+      <div class="suggestion-box" x-data="{ 
+        suggestionOpen: false, 
+        suggestionText: '', 
+        suggestionContact: '', 
+        suggestionSubmitting: false,
+        suggestionDone: false,
+        suggestionError: '',
+        submitSuggestion() {
+          if (!this.suggestionText.trim()) return;
+          this.suggestionSubmitting = true;
+          this.suggestionError = '';
+          const formData = new FormData();
+          formData.append('suggestion', this.suggestionText.trim());
+          formData.append('contact', this.suggestionContact.trim() || '匿名');
+          formData.append('page', '首页建议箱');
+          formData.append('timestamp', new Date().toISOString());
+          formData.append('_subject', '【个人之旅】用户建议');
+          formData.append('_replyto', this.suggestionContact.trim() || '');
+          formData.append('_captcha', 'false');
+          formData.append('_template', 'table');
+          fetch('https://formsubmit.co/ajax/2287409171@qq.com', {
+            method: 'POST',
+            body: formData
+          })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success) {
+              this.suggestionDone = true;
+              this.suggestionText = '';
+              this.suggestionContact = '';
+              setTimeout(() => { this.suggestionDone = false; this.suggestionOpen = false; }, 2500);
+            } else {
+              this.suggestionError = '提交失败，请稍后重试';
+            }
+          })
+          .catch(() => {
+            this.suggestionError = '网络错误，请检查网络后重试';
+          })
+          .finally(() => { this.suggestionSubmitting = false; });
+        }
+      }">
+        <!-- 折叠头部 -->
+        <div class="suggestion-header" @click="suggestionOpen = !suggestionOpen">
+          <div class="suggestion-header-left">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+            <span class="suggestion-title">建议箱</span>
+            <span class="suggestion-badge" x-show="!suggestionOpen">有话要说？</span>
+          </div>
+          <svg class="suggestion-chevron" :class="{ open: suggestionOpen }" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+
+        <!-- 展开内容 -->
+        <div class="suggestion-body" x-show="suggestionOpen" x-transition>
+          <!-- 成功提示 -->
+          <div class="suggestion-success" x-show="suggestionDone" x-transition>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+            <span>感谢你的建议！已发送到开发团队 💌</span>
+          </div>
+
+          <!-- 表单 -->
+          <template x-if="!suggestionDone">
+            <div>
+              <textarea class="suggestion-textarea" x-model="suggestionText" 
+                placeholder="写下你的建议、想法或反馈…任何改进点都欢迎 ✨"
+                rows="3" maxlength="500"
+                @input="suggestionError = ''"></textarea>
+              <div class="suggestion-chars" x-text="suggestionText.length + '/500'"></div>
+
+              <input class="suggestion-input" x-model="suggestionContact" 
+                type="text" placeholder="联系方式（选填，方便我们回复你）"
+                @input="suggestionError = ''">
+
+              <div class="suggestion-error" x-show="suggestionError" x-text="suggestionError"></div>
+
+              <button class="suggestion-submit" 
+                :disabled="!suggestionText.trim() || suggestionSubmitting"
+                @click="submitSuggestion()">
+                <svg x-show="suggestionSubmitting" class="suggestion-spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" stroke-opacity="0.3"/><path d="M12 2a10 10 0 019.95 9"/>
+                </svg>
+                <span x-text="suggestionSubmitting ? '发送中...' : '发送建议'"></span>
+              </button>
+            </div>
+          </template>
         </div>
       </div>
     </div>
@@ -3972,6 +4066,6 @@
 <!-- 手势导航指示器 -->
 <div class="swipe-indicator" :class="{ visible: swipeHintVisible }" x-text="swipeHintText"></div>
 
-<script src="js/app.js?v=202606100200"></script>
+<script src="js/app.js?v=202606110055"></script>
 </body>
 </html>

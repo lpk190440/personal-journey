@@ -958,6 +958,84 @@
   .review-reminder { background: var(--hint-color); border-radius: var(--radius-md); padding: 12px 16px; margin-bottom: 12px;
     display: flex; align-items: center; justify-content: space-between; }
 
+  /* ===== 建议箱 ===== */
+  .suggestion-box {
+    background: var(--card-bg);
+    border-radius: var(--radius-lg);
+    border: 0.5px solid var(--border);
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .suggestion-box:hover { border-color: var(--accent); }
+  .suggestion-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; cursor: pointer; user-select: none;
+    transition: background 0.2s;
+  }
+  .suggestion-header:hover { background: var(--bg-secondary); }
+  .suggestion-header-left {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .suggestion-title {
+    font-size: 14px; font-weight: 500; color: var(--text-primary);
+  }
+  .suggestion-badge {
+    font-size: 11px; color: var(--accent); background: rgba(91,140,155,0.1);
+    padding: 2px 8px; border-radius: 10px;
+  }
+  .suggestion-chevron {
+    color: var(--text-weak); transition: transform 0.3s;
+  }
+  .suggestion-chevron.open { transform: rotate(180deg); }
+  .suggestion-body {
+    padding: 0 16px 16px;
+  }
+  .suggestion-textarea {
+    width: 100%; resize: vertical; min-height: 72px;
+    border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg-secondary); color: var(--text-primary);
+    font-family: var(--font); font-size: 13px; padding: 10px 12px;
+    transition: border-color 0.2s; box-sizing: border-box;
+  }
+  .suggestion-textarea:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .suggestion-textarea::placeholder { color: var(--text-weak); }
+  .suggestion-chars {
+    text-align: right; font-size: 10px; color: var(--text-weak);
+    margin-top: 4px; margin-bottom: 8px;
+  }
+  .suggestion-input {
+    width: 100%; border: 0.5px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg-secondary); color: var(--text-primary);
+    font-family: var(--font); font-size: 13px; padding: 10px 12px;
+    transition: border-color 0.2s; box-sizing: border-box;
+  }
+  .suggestion-input:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .suggestion-input::placeholder { color: var(--text-weak); }
+  .suggestion-error {
+    color: #E6C3C3; font-size: 12px; margin-top: 6px; min-height: 16px;
+  }
+  .suggestion-submit {
+    width: 100%; margin-top: 10px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 10px 20px; border-radius: var(--radius-sm); border: none;
+    font-family: var(--font); font-size: 13px; cursor: pointer;
+    background: var(--accent); color: #fff; font-weight: 500;
+    transition: all 0.2s; min-height: 44px;
+  }
+  .suggestion-submit:hover:not(:disabled) { background: var(--accent-hover); }
+  .suggestion-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+  .suggestion-spinner { animation: spin 0.8s linear infinite; }
+  .suggestion-success {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 20px 0; text-align: center;
+    color: var(--text-primary); font-size: 14px; font-weight: 500;
+  }
+
   @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
   .ai-card { border: 1px solid rgba(91,140,155,0.3); background: linear-gradient(135deg, rgba(91,140,155,0.05), rgba(91,140,155,0.02)); }
   .ai-loading { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 20px; }
