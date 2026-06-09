@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人之旅 - 产品体验优化与需求覆盖分析报告（V1.3更新）</title>
+<style>
+  :root {
+    --bg: #F8F7F4; --card: #FFFFFF; --text: #2C2C2A; --text2: #5F5E5A; --text3: #888780;
+    --border: rgba(0,0,0,0.08); --accent: #5B8C9B; --accent2: #8FBCC7;
+    --green: #3B6D11; --green-bg: #EAF3DE; --amber: #854F0B; --amber-bg: #FAEEDA;
+    --red: #791F1F; --red-bg: #FCEBEB; --teal: #1D9E75; --teal-bg: #E1F5EE;
+    --purple: #534AB7; --purple-bg: #EEEDFE;
+    --radius: 12px; --radius-sm: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1A1A1E; --card: #242428; --text: #E8E8E5; --text2: #A8A8A5; --text3: #6A6A67;
+      --border: rgba(255,255,255,0.1); --green-bg: #1A2E14; --amber-bg: #2E2418; --red-bg: #2E1818;
+      --teal-bg: #142E28; --purple-bg: #1E1D32; }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.7; padding: 24px; max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+  h2 { font-size: 20px; font-weight: 600; margin: 40px 0 16px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--accent); }
+  h3 { font-size: 16px; font-weight: 600; margin: 24px 0 12px; }
+  h4 { font-size: 14px; font-weight: 600; margin: 16px 0 8px; }
+  .meta { font-size: 13px; color: var(--text3); margin-bottom: 24px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 20px 0; }
+  .summary-card { background: var(--card); border-radius: var(--radius); padding: 16px;
+    border: 1px solid var(--border); text-align: center; }
+  .summary-card .num { font-size: 28px; font-weight: 700; }
+  .summary-card .label { font-size: 12px; color: var(--text3); margin-top: 4px; }
+  .card { background: var(--card); border-radius: var(--radius); padding: 20px;
+    border: 1px solid var(--border); margin: 16px 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; padding: 10px 12px; font-weight: 600; border-bottom: 2px solid var(--border);
+    background: var(--bg); color: var(--text2); font-size: 12px; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:hover { background: var(--bg); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px;
+    font-weight: 500; }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); }
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-teal { background: var(--teal-bg); color: var(--teal); }
+  .badge-purple { background: var(--purple-bg); color: var(--purple); }
+  .badge-blue { background: #E3F0FF; color: #1A5FB4; }
+  .progress-bar { width: 100px; height: 8px; background: var(--bg); border-radius: 4px;
+    display: inline-block; vertical-align: middle; margin-right: 8px; }
+  .progress-bar .fill { height: 100%; border-radius: 4px; }
+  .priority-tag { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 11px;
+    font-weight: 600; }
+  .p0 { background: var(--red-bg); color: var(--red); }
+  .p1 { background: var(--amber-bg); color: var(--amber); }
+  .p2 { background: var(--teal-bg); color: var(--teal); }
+  .flow-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 12px 16px; text-align: center; font-size: 13px; font-weight: 500;
+    min-width: 100px; position: relative; }
+  .flow-box.highlight { border-color: var(--accent); background: rgba(91,140,155,0.05); }
+  .flow-box.done { border-color: var(--green); background: var(--green-bg); }
+  .flow-container { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 16px 0; }
+  .flow-arrow { color: var(--text3); font-size: 18px; }
+  .shortcut-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .shortcut-item { background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 14px; }
+  .shortcut-item .rank { font-size: 20px; font-weight: 700; color: var(--accent); float: left;
+    margin-right: 10px; }
+  .shortcut-item h4 { margin: 0 0 4px 36px; font-size: 13px; }
+  .shortcut-item p { margin-left: 36px; font-size: 12px; color: var(--text2); }
+  .shortcut-item .saving { display: inline-block; margin-left: 36px; font-size: 11px;
+    color: var(--teal); font-weight: 500; }
+  .setting-row { display: grid; grid-template-columns: 200px 120px 1fr 80px;
+    gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+    align-items: center; }
+  .setting-row:last-child { border-bottom: none; }
+  .feedback-flow { display: flex; flex-direction: column; gap: 12px; }
+  .feedback-step { display: flex; align-items: center; gap: 12px; }
+  .feedback-step .icon { width: 36px; height: 36px; border-radius: 50%;
+    background: var(--accent); color: white; display: flex; align-items: center;
+    justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0; }
+  .feedback-step .detail { flex: 1; }
+  .feedback-step .detail h4 { margin: 0; font-size: 13px; }
+  .feedback-step .detail p { margin: 2px 0 0; font-size: 12px; color: var(--text2); }
+  .connector { width: 2px; height: 16px; background: var(--accent); margin-left: 17px; opacity: 0.4; }
+  .toc { background: var(--card); border-radius: var(--radius); padding: 20px; margin: 16px 0;
+    border: 1px solid var(--border); }
+  .toc ol { margin: 0; padding-left: 20px; }
+  .toc li { margin: 6px 0; font-size: 13px; }
+  .toc li a { color: var(--accent); text-decoration: none; }
+  .section-divider { text-align: center; color: var(--text3); margin: 32px 0; font-size: 12px; }
+  .impact-high { color: var(--red); font-weight: 600; }
+  .impact-mid { color: var(--amber); font-weight: 600; }
+  .impact-low { color: var(--teal); font-weight: 600; }
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px;
+    background: var(--bg); color: var(--text3); margin-left: 4px; }
+  blockquote { border-left: 3px solid var(--accent); padding: 12px 16px; margin: 12px 0;
+    background: var(--card); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 13px; color: var(--text2); }
+  .delta { font-size: 11px; font-weight: 600; margin-left: 4px; }
+  .delta-up { color: var(--green); }
+  .delta-same { color: var(--text3); }
+  .changelog { background: var(--green-bg); border-radius: var(--radius); padding: 16px;
+    border: 1px solid rgba(59,109,17,0.15); margin: 16px 0; }
+  .changelog h4 { color: var(--green); margin-top: 0; }
+  .changelog ul { margin-left: 20px; font-size: 13px; }
+  .changelog li { margin: 4px 0; }
+  @media (max-width: 640px) {
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .shortcut-grid { grid-template-columns: 1fr; }
+    .setting-row { grid-template-columns: 1fr; gap: 4px; }
+    body { padding: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<h1>个人之旅 - 产品体验优化与需求覆盖分析报告</h1>
+<p class="meta">更新时间：2026-06-09 00:34 | 版本：v1.3-Enhanced | 分析范围：产品需求文档 vs 当前实现 (index.html 3589行/156.5KB)</p>
+
+<div class="summary-grid">
+  <div class="summary-card">
+    <div class="num" style="color:var(--accent)">61.4%</div>
+    <div class="label">整体需求覆盖率 <span class="delta delta-up">▲22.7%</span></div>
+  </div>
+  <div class="summary-card">
+    <div class="num" style="color:var(--green)">7</div>
+    <div class="label">已实现模块 (70%+) <span class="delta delta-up">▲4</span></div>
+  </div>
+  <div class="summary-card">
+    <div class="num" style="color:var(--amber)">5</div>
+    <div class="label">部分实现模块 <span class="delta delta-same">→2↓</span></div>
+  </div>
+  <div class="summary-card">
+    <div class="num" style="color:var(--red)">2</div>
+    <div class="label">未实现/严重缺失 <span class="delta delta-up">▲3</span></div>
+  </div>
+</div>
+
+<div class="changelog">
+  <h4>V1.1-V1.3 迭代变更记录</h4>
+  <ul>
+    <li><strong>V1.1（基础补强）</strong>：任务CRUD补全 / 循环任务自动克隆 / 首页FAB快速添加 / 首页打卡卡片 / SOS浮动按钮 / 通知接口 / 数据导入 / 目标预警 / 每日高光 / 情绪输入 / 反馈入口 / 番茄钟自定义+长按启动</li>
+    <li><strong>V1.2（体验升级）</strong>：人脉结构化表单 / 社交节奏提醒 / 时间轴筛选栏 / 弹性方案预览模式 / 每日复盘提醒 / 番茄钟专注模式 / 个性化设置12+项 / 经验反哺闭环</li>
+    <li><strong>V1.3（闭环完善）</strong>：反馈入口增强 / 数据导入导出完整闭环</li>
+  </ul>
+</div>
+
+<div class="toc">
+  <h3 style="margin-top:0">目录</h3>
+  <ol>
+    <li><a href="#s1">需求覆盖率评估矩阵（含变化对比）</a></li>
+    <li><a href="#s2">模块一：任务管理</a></li>
+    <li><a href="#s3">模块二：时间轴</a></li>
+    <li><a href="#s4">模块三：NLP智能输入</a></li>
+    <li><a href="#s5">模块四：AI分析</a></li>
+    <li><a href="#s6">模块五：人脉管理</a></li>
+    <li><a href="#s7">模块六：番茄钟</a></li>
+    <li><a href="#s8">模块七：正反馈体系</a></li>
+    <li><a href="#s9">模块八：系统弹性</a></li>
+    <li><a href="#s10">模块九：目标管理</a></li>
+    <li><a href="#s11">缺失功能专项：中枢层/通知/复盘</a></li>
+    <li><a href="#s12">交互流程优化（已完成项标记）</a></li>
+    <li><a href="#s13">高频操作TOP10快捷入口方案（已实现状态）</a></li>
+    <li><a href="#s14">个性化设置清单（已实现状态）</a></li>
+    <li><a href="#s15">反馈机制设计</a></li>
+    <li><a href="#s16">迭代完成状态与下一阶段规划</a></li>
+  </ol>
+</div>
+
+<!-- ========== 第一章：覆盖率矩阵 ========== -->
+<h2 id="s1">一、需求覆盖率评估矩阵</h2>
+
+<p>逐项对照产品需求文档，对14个功能模块进行覆盖率评估。评分标准：已实现(70%+，绿)、部分实现(30-69%，橙)、未实现(0-29%，红)。<strong>红色箭头</strong>标注V1.3后的变化幅度。</p>
+
+<table>
+  <thead>
+    <tr><th style="width:18%">模块</th><th style="width:10%">覆盖率</th><th>状态</th><th style="width:8%">影响</th><th>变化摘要</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>NLP智能输入</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:88%;background:var(--green)"></span></span>88%<span class="delta delta-up">▲3%</span></td>
+      <td><span class="badge badge-green">已实现</span></td>
+      <td><span class="priority-tag p0">P0</span></td>
+      <td>首页FAB简化版NLP入口；模板数量有限；跨端同步未实现</td>
+    </tr>
+    <tr>
+      <td><strong>正反馈体系</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:88%;background:var(--green)"></span></span>88%<span class="delta delta-up">▲8%</span></td>
+      <td><span class="badge badge-green">已实现</span></td>
+      <td><span class="priority-tag p1">P1</span></td>
+      <td>每日高光入口已添加 <span class="badge badge-green">NEW</span>；经验反哺已闭环到目标调整建议 <span class="badge badge-green">NEW</span></td>
+    </tr>
+    <tr>
+      <td><strong>系统弹性</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:85%;background:var(--green)"></span></span>85%<span class="delta delta-up">▲10%</span></td>
+      <td><span class="badge badge-green">已实现</span></td>
+      <td><span class="priority-tag p0">P0</span></td>
+      <td>弹性方案预览模式（变化前vs变化后对比）已实现 <span class="badge badge-green">NEW</span>；智能缓冲仍有提升空间</td>
+    </tr>
+    <tr>
+      <td><strong>目标管理</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:78%;background:var(--green)"></span></span>78%<span class="delta delta-up">▲8%</span></td>
+      <td><span class="badge badge-green">已实现</span></td>
+      <td><span class="priority-tag p0">P0</span></td>
+      <td>目标预警（周进度&lt;30%自动推送）已实现 <span class="badge badge-green">NEW</span>；自动复盘触发仍缺失</td>
+    </tr>
+    <tr>
+      <td><strong>任务管理</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:75%;background:var(--green)"></span></span>75%<span class="delta delta-up">▲30%</span></td>
+      <td><span class="badge badge-green">已实现</span></td>
+      <td><span class="priority-tag p0">P0</span></td>
+      <td>CRUD完整 <span class="badge badge-green">NEW</span>；循环任务自动克隆 <span class="badge badge-green">NEW</span>；仍缺批量操作和任务依赖关系</td>
+    </tr>
+    <tr>
+      <td><strong>番茄钟</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:75%;background:var(--green)"></span></span>75%<span class="delta delta-up">▲25%</span></td>
+      <td><span class="badge badge-green">已实现</span></td>
+      <td><span class="priority-tag p1">P1</span></td>
+      <td>自定义时长 <span class="badge badge-green">NEW</span>；专注模式 <span class="badge badge-green">NEW</span>；长按任务启动 <span class="badge badge-green">NEW</span>；缺断续原因标记</td>
+    </tr>
+    <tr>
+      <td><strong>时间轴</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:70%;background:var(--amber)"></span></span>70%<span class="delta delta-up">▲15%</span></td>
+      <td><span class="badge badge-amber">部分实现</span></td>
+      <td><span class="priority-tag p0">P0</span></td>
+      <td>筛选栏（标签+类型）已实现 <span class="badge badge-green">NEW</span>；智能缓冲逻辑仍为简单分支</td>
+    </tr>
+    <tr>
+      <td><strong>AI分析</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:65%;background:var(--amber)"></span></span>65%<span class="delta delta-up">▲15%</span></td>
+      <td><span class="badge badge-amber">部分实现</span></td>
+      <td><span class="priority-tag p0">P0</span></td>
+      <td>情绪输入 <span class="badge badge-green">NEW</span>；社交节奏提醒 <span class="badge badge-green">NEW</span>；经验反哺 <span class="badge badge-green">NEW</span>；核心仍是if-else规则树</td>
+    </tr>
+    <tr>
+      <td><strong>人脉管理</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:68%;background:var(--amber)"></span></span>68%<span class="delta delta-up">▲28%</span></td>
+      <td><span class="badge badge-amber">部分实现</span></td>
+      <td><span class="priority-tag p1">P1</span></td>
+      <td>结构化表单（7字段） <span class="badge badge-green">NEW</span>；社交节奏提醒 <span class="badge badge-green">NEW</span>；缺互动历史时间线</td>
+    </tr>
+    <tr>
+      <td><strong>个性化设置</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:62%;background:var(--amber)"></span></span>62%<span class="delta delta-up">▲32%</span></td>
+      <td><span class="badge badge-amber">部分实现</span></td>
+      <td><span class="priority-tag p0">P0</span></td>
+      <td>从3项扩展至12+项 <span class="badge badge-green">NEW</span>；缺锚点自定义/主题色预设</td>
+    </tr>
+    <tr>
+      <td><strong>通知/提醒</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:22%;background:var(--red)"></span></span>22%<span class="delta delta-up">▲17%</span></td>
+      <td><span class="badge badge-red">未实现</span></td>
+      <td><span class="priority-tag p0">P0</span></td>
+      <td>设置开关+提醒时间接口已预留 <span class="badge badge-blue">API</span>；Notification API未实际调用</td>
+    </tr>
+    <tr>
+      <td><strong>每日智能复盘</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:28%;background:var(--red)"></span></span>28%<span class="delta delta-up">▲28%</span></td>
+      <td><span class="badge badge-red">未实现</span></td>
+      <td><span class="priority-tag p1">P1</span></td>
+      <td>首页复盘提醒卡片 <span class="badge badge-green">NEW</span>；无自动生成总结、无21:30定时触发</td>
+    </tr>
+    <tr>
+      <td><strong>反馈入口</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:55%;background:var(--amber)"></span></span>55%<span class="delta delta-up">▲55%</span></td>
+      <td><span class="badge badge-amber">部分实现</span></td>
+      <td><span class="priority-tag p2">P2</span></td>
+      <td>GitHub Issue预填链接已实现 <span class="badge badge-green">NEW</span>；缺分类表单和本地反馈队列</td>
+    </tr>
+    <tr>
+      <td><strong>中枢层引擎</strong></td>
+      <td><span class="progress-bar"><span class="fill" style="width:0%;background:var(--red)"></span></span>0%<span class="delta delta-same">—</span></td>
+      <td><span class="badge badge-red">未实现</span></td>
+      <td><span class="priority-tag p2">P2</span></td>
+      <td>决策/学习/监控/画像四大引擎均未实现，属V2.0规划</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <strong>关键变化：</strong>V1.1-V1.3 迭代后覆盖率从 38.7% 提升至 61.4%（+22.7个百分点）。已实现模块从3个增至7个，完全未实现从5个降至2个。<span class="impact-high">P0级剩余缺口</span>：通知系统（22%，需接入Notification API）、个性化设置（62%，缺锚点/主题色）、时间轴智能调度（70%）。
+</blockquote>
+
+<!-- ========== 第二章~第十章：各模块详细 ========== -->
+<h2 id="s2">二、模块一：任务管理</h2>
+<div class="card">
+  <h4>覆盖率变化：45% → 75% <span class="delta delta-up">▲30%</span></h4>
+  <table>
+    <tr><th>子功能</th><th>V1.0状态</th><th>V1.3状态</th><th>变更说明</th></tr>
+    <tr><td>增删改查</td><td><span class="badge badge-amber">部分</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.1新增</strong>：删除（二次点击确认+3秒超时恢复）；编辑（全字段模态框：title/time/duration/tags/priority/type/recurring/locked/goalId）</td></tr>
+    <tr><td>标签体系</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化。4类标签（工作/生活/成长/重要），编辑模态框中可切换</td></tr>
+    <tr><td>循环任务</td><td><span class="badge badge-amber">部分</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.1新增</strong>：cloneRecurringTasks()，init时自动检测recurring=true的任务并克隆到今日</td></tr>
+    <tr><td>批量操作</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-red">未实现</span></td><td>仍无全选、批量删除、批量改标签</td></tr>
+    <tr><td>任务关系</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-red">未实现</span></td><td>仍无父子任务、无依赖/阻塞关系</td></tr>
+    <tr><td>快速添加入口</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.1新增</strong>：首页FAB「+」按钮，弹出输入框+实时简化版NLP解析，回车确认添加</td></tr>
+  </table>
+  <h4 style="margin-top:16px">剩余缺口</h4>
+  <p>批量操作（多选删除/改标签）属于中频需求，可在V2.0中通过长按多选模式实现。任务依赖关系属于低频高级功能，建议纳入V2.0中枢层引擎规划。</p>
+</div>
+
+<h2 id="s3">三、模块二：时间轴</h2>
+<div class="card">
+  <h4>覆盖率变化：55% → 70% <span class="delta delta-up">▲15%</span></h4>
+  <table>
+    <tr><th>子功能</th><th>V1.0状态</th><th>V1.3状态</th><th>变更说明</th></tr>
+    <tr><td>四类区块</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化。生活锚点/固定/弹性/缓冲间隙四类渲染完整</td></tr>
+    <tr><td>筛选栏</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.2新增</strong>：标签筛选（全部/工作/生活/成长/重要）+ 类型筛选（全部/固定/弹性），双维度联动</td></tr>
+    <tr><td>三大重排</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-amber">部分</span></td><td>缓冲带吸收有简单逻辑；整体重排为ABC方案分支。弹性块调整仍无时间感知</td></tr>
+    <tr><td>拖拽交互</td><td><span class="badge badge-amber">部分</span></td><td><span class="badge badge-amber">部分</span></td><td>无变化。HTML5 drag&drop交换时间字段，非真正时间轴拖拽</td></tr>
+    <tr><td>SOS入口</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.1新增</strong>：首页左下角SOS浮动按钮，一键跳转弹性方案页</td></tr>
+  </table>
+  <h4 style="margin-top:16px">剩余缺口</h4>
+  <p>智能调度（考虑任务优先级+精力曲线+依赖关系的自动排布）需要决策引擎支撑，属V2.0规划。当前筛选功能满足日常使用。</p>
+</div>
+
+<h2 id="s4">四、模块三：NLP智能输入</h2>
+<div class="card">
+  <h4>覆盖率变化：85% → 88% <span class="delta delta-up">▲3%</span></h4>
+  <table>
+    <tr><th>子功能</th><th>V1.0状态</th><th>V1.3状态</th><th>变更说明</th></tr>
+    <tr><td>9步解析链</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化。200+行正则，完整解析链</td></tr>
+    <tr><td>纠错分层</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化</td></tr>
+    <tr><td>肌肉记忆</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化</td></tr>
+    <tr><td>模板快捷</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化</td></tr>
+    <tr><td>FAB简化入口</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.1新增</strong>：首页FAB弹出简化版NLP面板（标签/时间/时长实时解析）</td></tr>
+    <tr><td>语音输入</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-red">未实现</span></td><td>Web Speech API未接入，属V2.0规划</td></tr>
+  </table>
+  <h4 style="margin-top:16px">后续方向</h4>
+  <p>LLM接入（硅基流动/DeepSeek）可将正则覆盖率从~60%提升至~90%，支持"帮我安排明天"级语义理解。这是V1.4阶段的最高ROI投入。</p>
+</div>
+
+<h2 id="s5">五、模块四：AI分析</h2>
+<div class="card">
+  <h4>覆盖率变化：50% → 65% <span class="delta delta-up">▲15%</span></h4>
+  <table>
+    <tr><th>子功能</th><th>V1.0状态</th><th>V1.3状态</th><th>变更说明</th></tr>
+    <tr><td>疲劳感知</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化。连续3天低能检测</td></tr>
+    <tr><td>分级干预</td><td><span class="badge badge-amber">部分</span></td><td><span class="badge badge-amber">部分</span></td><td>L1/L2/L3三级存在，干预形式差异有限（均为文字卡片）。L3可一键执行弹性方案 <span class="badge badge-green">NEW</span></td></tr>
+    <tr><td>情绪输入</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.1新增</strong>：打卡页1-5级情绪滑块，保存至checkin记录</td></tr>
+    <tr><td>社交节奏提醒</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.2新增</strong>：L1核心圈>3天/L2>7天/L3>14天未联系→AI洞察页推送提醒</td></tr>
+    <tr><td>目标预警</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.1新增</strong>：周进度&lt;30%的目标在AI洞察页显示预警卡片</td></tr>
+    <tr><td>经验反哺</td><td><span class="badge badge-amber">部分</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.2新增</strong>：weeklyTips()生成目标调整建议+任务类型均衡建议</td></tr>
+    <tr><td>自动干预执行</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-amber">部分</span></td><td>L3级别可一键跳转弹性方案页并预览执行。仍缺全自动执行（修改任务+保存）</td></tr>
+  </table>
+  <h4 style="margin-top:16px">核心瓶颈</h4>
+  <p>AI分析的核心瓶颈在于「规则引擎 vs 真正AI」的差距。当前所有"洞察"本质上是if-else分支，用户使用多次后容易识别模式。V1.4接入LLM后可将此模块提升至80%+。</p>
+</div>
+
+<h2 id="s6">六、模块五：人脉管理</h2>
+<div class="card">
+  <h4>覆盖率变化：40% → 68% <span class="delta delta-up">▲28%</span></h4>
+  <table>
+    <tr><th>子功能</th><th>V1.0状态</th><th>V1.3状态</th><th>变更说明</th></tr>
+    <tr><td>L1-L5分层</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化</td></tr>
+    <tr><td>基础CRUD</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化（但输入方式从prompt改为模态框）</td></tr>
+    <tr><td>结构化档案</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.2新增</strong>：7字段模态框表单（姓名/L1-L5/备注/生日/喜好/禁忌/重要节点），替代prompt弹窗</td></tr>
+    <tr><td>社交节奏提醒</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.2新增</strong>：基于lastContact+level计算该联系列表，在AI洞察页推送</td></tr>
+    <tr><td>互动历史</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-red">未实现</span></td><td>仍只有lastContact单字段，无完整互动时间线</td></tr>
+    <tr><td>AI智能补充</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-red">未实现</span></td><td>需要LLM，属V1.4规划</td></tr>
+  </table>
+</div>
+
+<h2 id="s7">七、模块六：番茄钟</h2>
+<div class="card">
+  <h4>覆盖率变化：50% → 75% <span class="delta delta-up">▲25%</span></h4>
+  <table>
+    <tr><th>子功能</th><th>V1.0状态</th><th>V1.3状态</th><th>变更说明</th></tr>
+    <tr><td>三种模式</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化。标准/冲刺/深度三种模式</td></tr>
+    <tr><td>自定义时长</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.1新增</strong>：设置页可配置标准/冲刺/深度三档时长 + 休息比（1:3~1:7）</td></tr>
+    <tr><td>专注模式</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.2新增</strong>：番茄运行时隐藏底部导航/FAB/AI建议等所有UI干扰</td></tr>
+    <tr><td>长按启动</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.1新增</strong>：时间轴任务卡片长按600ms直接启动番茄钟并关联任务</td></tr>
+    <tr><td>数据联动</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化。番茄数据联动到AI洞察</td></tr>
+    <tr><td>断续标记</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-red">未实现</span></td><td>中断番茄时无原因标记，属V2.0低优先级</td></tr>
+  </table>
+</div>
+
+<h2 id="s8">八、模块七：正反馈体系</h2>
+<div class="card">
+  <h4>覆盖率变化：80% → 88% <span class="delta delta-up">▲8%</span></h4>
+  <table>
+    <tr><th>子功能</th><th>V1.0状态</th><th>V1.3状态</th><th>变更说明</th></tr>
+    <tr><td>周回顾/报表</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化</td></tr>
+    <tr><td>时间里程碑</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化</td></tr>
+    <tr><td>数字断舍离</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化。模糊语言描述</td></tr>
+    <tr><td>经验反哺</td><td><span class="badge badge-amber">部分</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.2新增</strong>：weeklyTips()生成目标调整建议+任务类型均衡建议，形成闭环</td></tr>
+    <tr><td>每日高光</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.1新增</strong>：打卡页添加「今日高光时刻」输入框，保存到weeklyHighlights</td></tr>
+    <tr><td>打卡热力图</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化</td></tr>
+    <tr><td>首页快捷打卡</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.1新增</strong>：首页打卡卡片，ABC三档一键点击打卡，无需跳转</td></tr>
+  </table>
+</div>
+
+<h2 id="s9">九、模块八：系统弹性</h2>
+<div class="card">
+  <h4>覆盖率变化：75% → 85% <span class="delta delta-up">▲10%</span></h4>
+  <table>
+    <tr><th>子功能</th><th>V1.0状态</th><th>V1.3状态</th><th>变更说明</th></tr>
+    <tr><td>六类突发模板</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化</td></tr>
+    <tr><td>ABC三方案</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化</td></tr>
+    <tr><td>预览模式</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.2新增</strong>：选方案后显示受影响任务对比（变化前vs变化后），确认后执行，替代alert</td></tr>
+    <tr><td>权限锁/留白</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化</td></tr>
+    <tr><td>生活锚点</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>锚点存在但不可自定义（硬编码3个），设置项预留接口</td></tr>
+    <tr><td>智能缓冲</td><td><span class="badge badge-amber">部分</span></td><td><span class="badge badge-amber">部分</span></td><td>超时自动+15min吸收有简单逻辑，但无动态弹性调整</td></tr>
+  </table>
+</div>
+
+<h2 id="s10">十、模块九：目标管理</h2>
+<div class="card">
+  <h4>覆盖率变化：70% → 78% <span class="delta delta-up">▲8%</span></h4>
+  <table>
+    <tr><th>子功能</th><th>V1.0状态</th><th>V1.3状态</th><th>变更说明</th></tr>
+    <tr><td>五级拆解</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>年/季/月/周/日五级完整</td></tr>
+    <tr><td>Anti-Goals护栏</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化</td></tr>
+    <tr><td>If-Then预演</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化</td></tr>
+    <tr><td>进度追踪</td><td><span class="badge badge-green">已实现</span></td><td><span class="badge badge-green">已实现</span></td><td>无变化</td></tr>
+    <tr><td>目标预警</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-green">已实现</span></td><td><strong>V1.1新增</strong>：AI洞察页检查周进度&lt;30%的目标，生成预警卡片</td></tr>
+    <tr><td>自动复盘触发</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-red">未实现</span></td><td>月度目标到期无自动复盘，属V2.0规划</td></tr>
+    <tr><td>截止日期</td><td><span class="badge badge-red">未实现</span></td><td><span class="badge badge-red">未实现</span></td><td>目标无deadline字段，无法倒计时提醒</td></tr>
+  </table>
+</div>
+
+<!-- ========== 第十一章：缺失功能专项 ========== -->
+<h2 id="s11">十一、缺失功能专项：中枢层/通知/复盘</h2>
+
+<h3>11.1 中枢层引擎（0% - P2 → V2.0）</h3>
+<div class="card">
+  <p>状态：<strong>未实现</strong>，无变化。决策引擎、学习引擎、监控引擎、画像引擎四大中枢组件均未启动。</p>
+  <p><strong>V2.0建议路径</strong>：先在现有代码中抽取决策逻辑为独立模块（DecisionEngine对象），再逐步接入LLM升级。短期用规则引擎替代。</p>
+</div>
+
+<h3>11.2 通知/提醒系统（22% - P0）</h3>
+<div class="card">
+  <p><span class="impact-high">影响等级：高</span> — 这是唯一仍严重不足的P0模块。</p>
+  <table>
+    <tr><th>子功能</th><th>状态</th><th>说明</th></tr>
+    <tr><td>设置开关</td><td><span class="badge badge-green">已实现</span></td><td>notifEnabled + dailyReminderHour 已存入settings</td></tr>
+    <tr><td>Notification API权限请求</td><td><span class="badge badge-red">未实现</span></td><td>设置页开关已预留，但未调用 Notification.requestPermission()</td></tr>
+    <tr><td>任务时间提醒</td><td><span class="badge badge-red">未实现</span></td><td>无Service Worker后台定时检查</td></tr>
+    <tr><td>未打卡提醒</td><td><span class="badge badge-red">未实现</span></td><td>每日21:00检查+通知推送未接入</td></tr>
+    <tr><td>番茄钟结束通知</td><td><span class="badge badge-red">未实现</span></td><td>Service Worker后台通知未接入</td></tr>
+  </table>
+  <p><strong>下一步</strong>：实现Notification API权限请求 + Service Worker定时检查，是提升到50%+覆盖率的关键。</p>
+</div>
+
+<h3>11.3 每日智能复盘（28% - P1）</h3>
+<div class="card">
+  <p>状态：<span class="badge badge-green">部分实现</span> — 首页复盘提醒卡片已添加（打开App检测今日是否有checkin记录）。</p>
+  <p><strong>剩余缺口</strong>：</p>
+  <ul style="margin-left:20px; font-size:13px;">
+    <li>无自动生成每日总结（需LLM或规则模板）</li>
+    <li>无21:30定时触发机制</li>
+    <li>复盘内容维度不完整（缺少：明日规划、精力曲线、任务分布分析）</li>
+  </ul>
+</div>
+
+<!-- ========== 第十二章：交互流程优化 ========== -->
+<h2 id="s12">十二、交互流程优化（已完成项标记）</h2>
+
+<h3>12.1 核心操作路径：添加任务 <span class="badge badge-green">已实现</span></h3>
+<div class="card">
+  <p><strong>优化后路径</strong>（3步）：</p>
+  <div class="flow-container">
+    <div class="flow-box done">首页FAB<br><small>右下角「+」</small></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box done">输入+即时解析<br><small>实时显示标签/时间</small></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box done">确认<br><small>回车或点击</small></div>
+  </div>
+  <p style="font-size:12px; color:var(--teal); margin-top:8px">步骤减少 50%（6步→3步），V1.1实现。首页FAB + 简化版NLP解析 + 回车确认。</p>
+</div>
+
+<h3>12.2 核心操作路径：打卡 <span class="badge badge-green">已实现</span></h3>
+<div class="card">
+  <p><strong>优化后路径</strong>（1步）：</p>
+  <div class="flow-container">
+    <div class="flow-box done">首页打卡卡片<br><small>点击A/B/C档</small></div>
+  </div>
+  <p style="font-size:12px; color:var(--teal); margin-top:8px">步骤减少 75%（4步→1步），V1.1实现。首页打卡卡片 + ABC三档点击 + 已打卡显示。</p>
+</div>
+
+<h3>12.3 核心操作路径：突发事件处理 <span class="badge badge-green">已实现</span></h3>
+<div class="card">
+  <p><strong>优化后路径</strong>（2步）：</p>
+  <div class="flow-container">
+    <div class="flow-box done">首页SOS按钮<br><small>浮动紧急入口</small></div>
+    <div class="flow-arrow">&rarr;</div>
+    <div class="flow-box done">场景+方案<br><small>一页完成选择+预览</small></div>
+  </div>
+  <p style="font-size:12px; color:var(--teal); margin-top:8px">步骤减少 60%（5步→2步），V1.1实现SOS按钮 + V1.2实现弹性方案预览。</p>
+</div>
+
+<h3>12.4 核心操作路径：番茄钟启动 <span class="badge badge-green">已实现</span></h3>
+<div class="card">
+  <p><strong>优化后路径</strong>（1步）：</p>
+  <div class="flow-container">
+    <div class="flow-box done">长按任务卡片<br><small>600ms → 开始番茄</small></div>
+  </div>
+  <p style="font-size:12px; color:var(--teal); margin-top:8px">步骤减少 67%（3步→1步），V1.1实现。长按检测 + 自动关联任务 + 跳转番茄钟页。</p>
+</div>
+
+<!-- ========== 第十三章：TOP10快捷入口 ========== -->
+<h2 id="s13">十三、高频操作 TOP10 快捷入口方案</h2>
+
+<div class="card">
+  <p>10个高频操作中，8个已完成实现，2个待V2.0。</p>
+</div>
+
+<div class="shortcut-grid">
+  <div class="shortcut-item">
+    <div class="rank">1</div>
+    <h4>快速添加任务 <span class="badge badge-green">已实现</span></h4>
+    <p>首页右下角FAB「+」按钮，弹出输入框+实时NLP解析，回车即添加</p>
+    <span class="saving">步骤 6→3 | 效率 +50%</span>
+  </div>
+  <div class="shortcut-item">
+    <div class="rank">2</div>
+    <h4>一键打卡 <span class="badge badge-green">已实现</span></h4>
+    <p>首页打卡卡片，点击A/B/C三档即打卡，无需跳页</p>
+    <span class="saving">步骤 4→1 | 效率 +75%</span>
+  </div>
+  <div class="shortcut-item">
+    <div class="rank">3</div>
+    <h4>完成任务</h4>
+    <p>时间轴任务卡片点击勾选框切换完成状态</p>
+    <span class="saving">步骤 2→1 | 效率 +50%</span>
+  </div>
+  <div class="shortcut-item">
+    <div class="rank">4</div>
+    <h4>启动番茄钟 <span class="badge badge-green">已实现</span></h4>
+    <p>长按时间轴任务卡片600ms直接启动番茄，自动关联当前任务</p>
+    <span class="saving">步骤 3→1 | 效率 +67%</span>
+  </div>
+  <div class="shortcut-item">
+    <div class="rank">5</div>
+    <h4>SOS紧急重排 <span class="badge badge-green">已实现</span></h4>
+    <p>首页左下角SOS浮动按钮，一键跳转弹性方案页（含预览对比）</p>
+    <span class="saving">步骤 5→2 | 效率 +60%</span>
+  </div>
+  <div class="shortcut-item">
+    <div class="rank">6</div>
+    <h4>时间轴筛选 <span class="badge badge-green">已实现</span></h4>
+    <p>首页时间轴顶部筛选栏，标签+类型双维度快速过滤</p>
+    <span class="saving">新增功能 | V1.2</span>
+  </div>
+  <div class="shortcut-item">
+    <div class="rank">7</div>
+    <h4>删除/编辑任务 <span class="badge badge-green">已实现</span></h4>
+    <p>任务卡片右侧删除按钮（二次确认）+ 编辑模态框（全字段）</p>
+    <span class="saving">新增功能 | V1.1</span>
+  </div>
+  <div class="shortcut-item">
+    <div class="rank">8</div>
+    <h4>数据导入/导出 <span class="badge badge-green">已实现</span></h4>
+    <p>设置页导出JSON + 导入JSON文件合并，完整闭环</p>
+    <span class="saving">新增功能 | V1.1</span>
+  </div>
+  <div class="shortcut-item">
+    <div class="rank">9</div>
+    <h4>每日高光记录 <span class="badge badge-green">已实现</span></h4>
+    <p>打卡页「今日高光时刻」输入框，一键保存</p>
+    <span class="saving">新增功能 | V1.1</span>
+  </div>
+  <div class="shortcut-item">
+    <div class="rank">10</div>
+    <h4>意见反馈 <span class="badge badge-green">已实现</span></h4>
+    <p>设置页「意见反馈」入口，点击打开GitHub Issue预填链接</p>
+    <span class="saving">新增功能 | V1.1</span>
+  </div>
+</div>
+
+<!-- ========== 第十四章：个性化设置清单 ========== -->
+<h2 id="s14">十四、个性化设置清单</h2>
+
+<div class="card">
+  <p>从V1.0的<strong>3项</strong>扩展至<strong>12+项</strong>，覆盖率30%→62%。</p>
+
+  <div class="setting-row" style="border-bottom:2px solid var(--border); font-weight:600;">
+    <div>配置项</div><div>状态</div><div>说明</div><div>可调范围</div>
+  </div>
+  <div class="setting-row">
+    <div><strong>深色模式</strong></div><td><span class="badge badge-green">V1.0</span> 跟随系统</td><td>手动/跟随系统</td><td>2档</td>
+  </div>
+  <div class="setting-row">
+    <div><strong>AI话术风格</strong></div><td><span class="badge badge-green">V1.0</span> 陪伴型</td><td>陪伴型/效率型/简洁型</td><td>3档</td>
+  </div>
+  <div class="setting-row">
+    <div><strong>留白比例</strong></div><td><span class="badge badge-green">V1.0</span> 20%</td><td>时间轴缓冲间隙占比</td><td>10%-40%</td>
+  </div>
+  <div class="setting-row">
+    <div><strong>番茄钟 - 标准时长</strong></div><td><span class="badge badge-green">V1.1</span> 25分钟</td><td>标准模式专注时长</td><td>15-60min</td>
+  </div>
+  <div class="setting-row">
+    <div><strong>番茄钟 - 冲刺时长</strong></div><td><span class="badge badge-green">V1.1</span> 10分钟</td><td>冲刺模式专注时长</td><td>5-20min</td>
+  </div>
+  <div class="setting-row">
+    <div><strong>番茄钟 - 深度时长</strong></div><td><span class="badge badge-green">V1.1</span> 50分钟</td><td>深度模式专注时长</td><td>30-120min</td>
+  </div>
+  <div class="setting-row">
+    <div><strong>番茄钟 - 休息比</strong></div><td><span class="badge badge-green">V1.1</span> 1:5</td><td>专注:休息时间比</td><td>1:3~1:7</td>
+  </div>
+  <div class="setting-row">
+    <div><strong>时间轴起止时间</strong></div><td><span class="badge badge-green">V1.2</span> 06-23</td><td>时间轴显示范围</td><td>04-02</td>
+  </div>
+  <div class="setting-row">
+    <div><strong>默认任务标签</strong></div><td><span class="badge badge-green">V1.1</span> 工作</td><td>NLP输入无标签时的默认值</td><td>4选1</td>
+  </div>
+  <div class="setting-row">
+    <div><strong>通知开关</strong></div><td><span class="badge badge-amber">V1.1</span> 关闭</td><td>接口已预留，Notification API未接入</td><td>开/关</td>
+  </div>
+  <div class="setting-row">
+    <div><strong>每日提醒时间</strong></div><td><span class="badge badge-amber">V1.1</span> 21:00</td><td>接口已预留，推送未接入</td><td>18-23</td>
+  </div>
+  <div class="setting-row">
+    <div><strong>专注模式</strong></div><td><span class="badge badge-green">V1.2</span> 关闭</td><td>番茄钟时隐藏所有UI元素</td><td>开/关</td>
+  </div>
+  <div class="setting-row" style="opacity:0.5">
+    <div><strong>生活锚点自定义</strong></div><td><span class="badge badge-red">待实现</span></td><td>可增删改晨间/午间/晚间锚点</td><td>最多6个</td>
+  </div>
+  <div class="setting-row" style="opacity:0.5">
+    <div><strong>主题色预设</strong></div><td><span class="badge badge-red">待实现</span></td><td>主色调选择</td><td>6色预设</td>
+  </div>
+</div>
+
+<!-- ========== 第十五章：反馈机制 ========== -->
+<h2 id="s15">十五、反馈机制设计</h2>
+
+<div class="card">
+  <h4>应用内反馈入口 <span class="badge badge-green">已实现</span></h4>
+  <p>设置页底部「意见反馈」按钮，点击打开预填的 GitHub Issue 链接（包含App版本+浏览器+时间信息）。</p>
+
+  <h4 style="margin-top:16px">反馈分类</h4>
+  <table>
+    <tr><th>类型</th><th>标识</th><th>处理优先级</th><th>当前状态</th></tr>
+    <tr><td>Bug报告</td><td><span class="badge badge-red">Bug</span></td><td>24小时响应</td><td>通过GitHub Issue提交</td></tr>
+    <tr><td>功能建议</td><td><span class="badge badge-teal">Suggest</span></td><td>72小时响应</td><td>通过GitHub Issue提交</td></tr>
+    <tr><td>体验反馈</td><td><span class="badge badge-purple">UX</span></td><td>48小时响应</td><td>通过GitHub Issue提交</td></tr>
+  </table>
+
+  <h4 style="margin-top:16px">处理流程（当前方案：方案B - GitHub Issues）</h4>
+  <div class="feedback-flow">
+    <div class="feedback-step">
+      <div class="icon">1</div>
+      <div class="detail">
+        <h4>用户点击「意见反馈」</h4>
+        <p>设置页 → 意见反馈 → 自动打开预填URL（标题/UA/时间）</p>
+      </div>
+    </div>
+    <div class="connector"></div>
+    <div class="feedback-step">
+      <div class="icon">2</div>
+      <div class="detail">
+        <h4>GitHub Issue 创建</h4>
+        <p>用户补充描述后提交至GitHub仓库Issues</p>
+      </div>
+    </div>
+    <div class="connector"></div>
+    <div class="feedback-step">
+      <div class="icon">3</div>
+      <div class="detail">
+        <h4>开发者处理</h4>
+        <p>标签分类 → 排优先级 → 修复 → 关闭Issue</p>
+      </div>
+    </div>
+  </div>
+
+  <h4 style="margin-top:16px">后续升级方向</h4>
+  <ul style="margin-left:20px; font-size:13px;">
+    <li><strong>分类选择</strong>：在App内添加Bug/建议/体验分类选择，预填到Issue标题</li>
+    <li><strong>截图附件</strong>：支持html2canvas截图自动附加到Issue</li>
+    <li><strong>方案C升级</strong>：接入EmailJS，支持离线反馈队列</li>
+  </ul>
+</div>
+
+<!-- ========== 第十六章：迭代完成状态 ========== -->
+<h2 id="s16">十六、迭代完成状态与下一阶段规划</h2>
+
+<h3>16.1 V1.1-V1.3 完成状态</h3>
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>周期</th><th>主题</th><th>核心任务</th><th>状态</th><th>覆盖率变化</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="priority-tag p0">V1.1</span></td>
+        <td><strong>基础补强</strong></td>
+        <td>
+          任务删除/编辑 ✅ | 循环任务克隆 ✅ | 通知接口 ✅ |
+          首页打卡卡片 ✅ | FAB快速添加 ✅ | SOS按钮 ✅ |
+          数据导入 ✅ | 目标预警 ✅ | 每日高光 ✅ |
+          情绪输入 ✅ | 反馈入口 ✅ | 番茄自定义+长按 ✅
+        </td>
+        <td><span class="badge badge-green">完成</span></td>
+        <td>38.7% → <strong>55%</strong> ✅</td>
+      </tr>
+      <tr>
+        <td><span class="priority-tag p1">V1.2</span></td>
+        <td><strong>体验升级</strong></td>
+        <td>
+          人脉结构化表单 ✅ | 社交节奏提醒 ✅ |
+          时间轴筛选栏 ✅ | 弹性方案预览 ✅ |
+          每日复盘提醒 ✅ | 番茄专注模式 ✅ |
+          设置扩展12+项 ✅ | 经验反哺闭环 ✅
+        </td>
+        <td><span class="badge badge-green">完成</span></td>
+        <td>55% → <strong>61.4%</strong> ✅</td>
+      </tr>
+      <tr>
+        <td><span class="priority-tag p1">V1.3</span></td>
+        <td><strong>闭环完善</strong></td>
+        <td>
+          反馈入口增强 ✅ | 数据导入导出闭环 ✅
+        </td>
+        <td><span class="badge badge-green">完成</span></td>
+        <td>— ✅</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>16.2 下一阶段：V1.4（AI接入）规划</h3>
+<div class="card">
+  <table>
+    <thead>
+      <tr><th>周期</th><th>主题</th><th>核心任务</th><th>预期覆盖率</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="priority-tag p1">V1.4</span></td>
+        <td><strong>AI接入</strong></td>
+        <td>
+          1. NLP接入LLM（硅基流动/DeepSeek API）— 从正则→语义理解<br>
+          2. AI洞察从规则升级为数据驱动个性化分析<br>
+          3. 每日智能复盘自动生成总结<br>
+          4. 情绪分析 + 精力曲线建模<br>
+          5. 通知系统实际接入Notification API + Service Worker
+        </td>
+        <td>61.4% → <strong>75%</strong></td>
+      </tr>
+      <tr>
+        <td><span class="priority-tag p2">V2.0</span></td>
+        <td><strong>系统进化</strong></td>
+        <td>
+          1. 决策引擎抽取为独立模块<br>
+          2. 学习引擎（用户行为画像 + 习惯预测）<br>
+          3. 云端同步（WebDAV/自建后端）<br>
+          4. 多设备数据同步<br>
+          5. 生活锚点自定义 + 主题色预设
+        </td>
+        <td>75% → <strong>92%</strong></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>16.3 技术风险评估</h3>
+<div class="card">
+  <table>
+    <thead><tr><th>风险项</th><th>等级</th><th>应对方案</th></tr></thead>
+    <tbody>
+      <tr><td>localStorage 5MB上限</td><td><span class="impact-high">高</span></td><td>V1.4实现数据压缩；V2.0迁移IndexedDB</td></tr>
+      <tr><td>单文件3589行可维护性</td><td><span class="impact-mid">中</span></td><td>V1.4考虑按页面拆分模块，引入Vite构建</td></tr>
+      <tr><td>Notification API权限拒绝</td><td><span class="impact-low">低</span></td><td>优雅降级：拒绝时引导手动开启，或改用页面内提醒</td></tr>
+      <tr><td>LLM API成本</td><td><span class="impact-mid">中</span></td><td>设置添加AI用量统计，超出预算自动回退规则引擎</td></tr>
+      <tr><td>Alpine.js性能瓶颈</td><td><span class="impact-low">低</span></td><td>当前115个方法/3589行在移动端流畅。如遇性能问题可迁移Vue/React</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h3>16.4 技术指标总览</h3>
+<div class="card">
+  <table>
+    <thead><tr><th>指标</th><th>V1.0</th><th>V1.3</th><th>变化</th></tr></thead>
+    <tbody>
+      <tr><td>总行数</td><td>2,776</td><td>3,589</td><td>+813 (+29%)</td></tr>
+      <tr><td>文件大小</td><td>128KB</td><td>156.5KB</td><td>+28.5KB (+22%)</td></tr>
+      <tr><td>方法数</td><td>~80</td><td>~115</td><td>+35 (+44%)</td></tr>
+      <tr><td>CSS类</td><td>~40</td><td>~54</td><td>+14 (+35%)</td></tr>
+      <tr><td>模态框</td><td>5</td><td>10</td><td>+5 (+100%)</td></tr>
+      <tr><td>设置项</td><td>3</td><td>12+</td><td>+9 (+300%)</td></tr>
+      <tr><td>覆盖率</td><td>38.7%</td><td>61.4%</td><td>+22.7pp</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section-divider">- END -</div>
+<p style="text-align:center; font-size:12px; color:var(--text3);">个人之旅 产品体验优化与需求覆盖分析报告 | V1.3-Enhanced | 2026-06-09</p>
+
+</body>
+</html>

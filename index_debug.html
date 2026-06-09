@@ -1,0 +1,2776 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5B8C9B">
+<meta name="description" content="个人之旅 - 温和极简的零焦虑个人生活操作系统">
+<title>个人之旅</title>
+<link rel="manifest" href="manifest.json">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary: #F8F6F3;
+    --bg-secondary: #F0EDE8;
+    --card-bg: #FFFFFF;
+    --text-primary: #3A3A3A;
+    --text-secondary: #7A7A7A;
+    --text-weak: #B0B0B0;
+    --accent: #5B8C9B;
+    --accent-hover: #4A7A89;
+    --accent-light: rgba(91, 140, 155, 0.12);
+    --border: #E5E5E5;
+    --border-light: #F0EDE8;
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.05);
+    --transition: 350ms ease-in-out;
+    --font: "Noto Sans SC", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+
+    /* 模块辅助色 */
+    --task-color: #A7C4BC;
+    --timeline-color: #D4C5B5;
+    --pomodoro-color: #B8D4E3;
+    --contact-color: #E6C3C3;
+    --goal-color: #C9D8B6;
+    --hint-color: #F2E2C4;
+
+    /* 标签色 */
+    --tag-work: rgba(167, 196, 188, 0.45);
+    --tag-life: rgba(230, 195, 195, 0.45);
+    --tag-grow: rgba(201, 216, 182, 0.45);
+    --tag-important: rgba(184, 212, 227, 0.45);
+  }
+
+  /* 深色模式 */
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light-mode) {
+      --bg-primary: #1E1E2E;
+      --bg-secondary: #28283E;
+      --card-bg: #32324A;
+      --text-primary: #E0E0E0;
+      --text-secondary: #A0A0A0;
+      --text-weak: #707070;
+      --border: #44445A;
+      --border-light: #383850;
+      --shadow: 0 2px 8px rgba(0,0,0,0.2);
+      --accent-light: rgba(91, 140, 155, 0.2);
+      --hint-color: rgba(242, 226, 196, 0.25);
+      --tag-work: rgba(167, 196, 188, 0.25);
+      --tag-life: rgba(230, 195, 195, 0.25);
+      --tag-grow: rgba(201, 216, 182, 0.25);
+      --tag-important: rgba(184, 212, 227, 0.25);
+    }
+  }
+  :root.dark-mode {
+    --bg-primary: #1E1E2E;
+    --bg-secondary: #28283E;
+    --card-bg: #32324A;
+    --text-primary: #E0E0E0;
+    --text-secondary: #A0A0A0;
+    --text-weak: #707070;
+    --border: #44445A;
+    --border-light: #383850;
+    --shadow: 0 2px 8px rgba(0,0,0,0.2);
+    --accent-light: rgba(91, 140, 155, 0.2);
+    --hint-color: rgba(242, 226, 196, 0.25);
+    --tag-work: rgba(167, 196, 188, 0.25);
+    --tag-life: rgba(230, 195, 195, 0.25);
+    --tag-grow: rgba(201, 216, 182, 0.25);
+    --tag-important: rgba(184, 212, 227, 0.25);
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+    min-height: 100dvh;
+    transition: background 0.4s ease-in-out, color 0.3s ease-in-out;
+  }
+
+  /* ===== 布局 ===== */
+  .app { max-width: 480px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; position: relative; }
+
+  .page-header {
+    padding: 48px 24px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .page-header h1 { font-size: 24px; font-weight: 600; }
+  .page-header .subtitle { font-size: 13px; color: var(--text-secondary); }
+
+  .page-content {
+    flex: 1; padding: 0 24px 100px; overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+
+  /* ===== 底部导航 ===== */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px; background: var(--card-bg);
+    border-top: 0.5px solid var(--border);
+    display: flex; justify-content: space-around; align-items: center;
+    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+    z-index: 100; border-radius: 16px 16px 0 0;
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 16px; cursor: pointer; transition: all var(--transition);
+    border-radius: var(--radius-sm); color: var(--text-weak);
+    background: none; border: none; font-family: var(--font); font-size: 11px;
+  }
+  .nav-item.active { color: var(--accent); font-weight: 500; }
+  .nav-item svg { width: 22px; height: 22px; transition: all var(--transition); }
+  .nav-item.active svg { color: var(--accent); }
+
+  /* ===== 通用组件 ===== */
+  .card {
+    background: var(--card-bg); border-radius: var(--radius-lg);
+    padding: 16px; border: 0.5px solid var(--border);
+    margin-bottom: 12px; transition: all var(--transition);
+  }
+  .card:hover { border-color: var(--accent); }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .card-title { font-size: 14px; font-weight: 500; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 10px 20px; border-radius: var(--radius-sm); border: none;
+    font-family: var(--font); font-size: 13px; cursor: pointer;
+    transition: all var(--transition); font-weight: 500;
+    min-height: 44px;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-secondary { background: var(--bg-secondary); color: var(--text-primary); }
+  .btn-secondary:hover { background: var(--border); }
+  .btn-ghost { background: transparent; color: var(--text-secondary); }
+  .btn-ghost:hover { background: var(--bg-secondary); }
+  .btn-sm { padding: 6px 14px; font-size: 12px; min-height: 36px; border-radius: 6px; }
+
+  .input {
+    width: 100%; padding: 10px 14px; border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border); background: var(--bg-secondary);
+    color: var(--text-primary); font-family: var(--font); font-size: 14px;
+    outline: none; transition: all var(--transition);
+  }
+  .input:focus { border-color: var(--accent); background: var(--card-bg); }
+  .input::placeholder { color: var(--text-weak); }
+
+  textarea.input {
+    resize: vertical; min-height: 80px; line-height: 1.6;
+  }
+
+  .tag {
+    display: inline-flex; align-items: center; padding: 3px 10px;
+    border-radius: 12px; font-size: 11px; font-weight: 400;
+    white-space: nowrap;
+  }
+  .tag-work { background: var(--tag-work); color: var(--text-primary); }
+  .tag-life { background: var(--tag-life); color: var(--text-primary); }
+  .tag-grow { background: var(--tag-grow); color: var(--text-primary); }
+  .tag-important { background: var(--tag-important); color: var(--text-primary); }
+
+  .hint-card {
+    background: var(--hint-color); border-radius: var(--radius-md);
+    padding: 12px 16px; margin-bottom: 12px; border: none;
+  }
+  .hint-card .title { font-size: 12px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+  .hint-card .desc { font-size: 12px; color: var(--text-secondary); }
+
+  .empty-state {
+    text-align: center; padding: 48px 24px; color: var(--text-weak);
+  }
+  .empty-state p { font-size: 14px; margin-top: 12px; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.3); z-index: 200;
+    display: flex; align-items: flex-end; justify-content: center;
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  .modal-overlay > div {
+    background: var(--card-bg); border-radius: 20px 20px 0 0;
+    width: 100%; max-width: 480px; max-height: 85vh; overflow-y: auto;
+    padding: 24px; animation: slideUp 0.35s ease-in-out;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  /* 页面切换动画 */
+  .page { display: none; animation: pageIn 0.4s ease-in-out; }
+  .page.active { display: block; }
+  @keyframes pageIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* 开关 */
+  .toggle { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider {
+    position: absolute; inset: 0; background: var(--border);
+    border-radius: 24px; transition: var(--transition);
+  }
+  .toggle .slider::before {
+    content: ""; position: absolute; left: 3px; top: 3px;
+    width: 18px; height: 18px; background: white;
+    border-radius: 50%; transition: var(--transition);
+  }
+  .toggle input:checked + .slider { background: var(--accent); }
+  .toggle input:checked + .slider::before { transform: translateX(20px); }
+
+  /* 滑块 */
+  .range-slider {
+    -webkit-appearance: none; width: 100%; height: 6px;
+    border-radius: 3px; background: var(--border); outline: none;
+  }
+  .range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px;
+    border-radius: 50%; background: var(--accent); cursor: pointer;
+    border: 2px solid white; box-shadow: var(--shadow);
+  }
+
+  /* 复选框 */
+  .checkbox {
+    width: 20px; height: 20px; border-radius: 5px;
+    border: 1.5px solid var(--border); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all var(--transition); flex-shrink: 0;
+  }
+  .checkbox.checked { background: var(--accent); border-color: var(--accent); }
+  .checkbox svg { width: 12px; height: 12px; color: white; display: none; }
+  .checkbox.checked svg { display: block; }
+
+  /* 滚动条 */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* 工具类 */
+  .flex { display: flex; }
+  .flex-col { flex-direction: column; }
+  .items-center { align-items: center; }
+  .justify-between { justify-content: space-between; }
+  .gap-sm { gap: 8px; }
+  .gap-md { gap: 12px; }
+  .gap-lg { gap: 16px; }
+  .mt-sm { margin-top: 8px; }
+  .mt-md { margin-top: 16px; }
+  .mt-lg { margin-top: 24px; }
+  .text-sm { font-size: 12px; }
+  .text-xs { font-size: 11px; }
+  .text-secondary { color: var(--text-secondary); }
+  .text-weak { color: var(--text-weak); }
+  .text-accent { color: var(--accent); }
+  .text-center { text-align: center; }
+  .w-full { width: 100%; }
+</style>
+</head>
+<script>window.__errors = []; window.onerror = function(msg, src, line, col, err) { window.__errors.push({msg, src, line, col, stack: err ? err.stack : null}); return false; }; window.addEventListener("unhandledrejection", function(e) { window.__errors.push({msg: "Unhandled: " + e.reason, stack: e.reason ? e.reason.stack : null}); });</script><body x-data="app()" x-init="init()">
+
+<div class="app">
+
+  <!-- ========== 页面1：首页时间轴 ========== -->
+  <template x-if="page === 'home'">
+  <div class="page active" id="page-home">
+    <div class="page-header">
+      <div>
+        <h1>今日时间轴</h1>
+        <p class="subtitle" x-text="todayStr"></p>
+      </div>
+      <div class="flex gap-sm">
+        <button class="btn btn-ghost btn-sm" @click="page = 'checkin'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </button>
+        <button class="btn btn-ghost btn-sm" @click="page = 'settings'">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <!-- 精力状态 -->
+      <div class="flex justify-between items-center" style="margin-bottom: 12px;">
+        <div class="flex items-center gap-sm">
+          <div :style="'width: 10px; height: 10px; border-radius: 50%; background: ' + energyColor() + ';'"></div>
+          <span class="text-sm" x-text="energyLabel()" style="font-weight: 500;"></span>
+        </div>
+        <span class="text-sm text-secondary" x-text="'今日完成 ' + todayCompletedCount() + '/' + todayTasks().length"></span>
+      </div>
+
+      <!-- AI建议 -->
+      <div class="hint-card" x-show="aiTip" x-transition>
+        <div class="title" x-text="aiTip.title"></div>
+        <div class="desc" x-text="aiTip.desc"></div>
+        <button class="btn btn-ghost btn-sm mt-sm" @click="aiTip = null">知道了</button>
+      </div>
+
+      <!-- 空状态 -->
+      <div class="card" x-show="timelineBlocks().length === 0">
+        <div class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-weak)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <p>今天还没有安排任务</p>
+          <button class="btn btn-primary mt-md" @click="page = 'nlp'">智能添加任务</button>
+        </div>
+      </div>
+
+      <!-- ===== 时间轴主体 ===== -->
+      <div x-show="timelineBlocks().length > 0" style="position: relative; padding-left: 52px;">
+        <!-- 时间线 -->
+        <div style="position: absolute; left: 16px; top: 4px; bottom: 4px; width: 1px; background: var(--border);"></div>
+
+        <template x-for="(block, idx) in timelineBlocks()" :key="block.id">
+          <div style="position: relative; margin-bottom: 4px; transition: all 0.4s ease-in-out;"
+            :style="block.type === 'gap' ? 'height: ' + block.height + 'px;' : ''">
+
+            <!-- 时间刻度 -->
+            <div style="position: absolute; left: -36px; top: 8px; font-size: 10px; color: var(--text-weak);"
+              x-show="block.type !== 'gap'" x-text="block.timeLabel"></div>
+
+            <!-- 时间点 -->
+            <div style="position: absolute; left: -21px; top: 12px; width: 8px; height: 8px; border-radius: 50%;"
+              :style="block.type === 'anchor' ? 'background: var(--border);' :
+                      block.type === 'flexible' ? 'background: var(--border); border: 1px solid ' + block.color + ';' :
+                      block.type === 'gap' ? 'background: transparent;' :
+                      'background: ' + block.color + ';'"
+              x-show="block.type !== 'gap'"></div>
+
+            <!-- 生活锚点 -->
+            <div x-show="block.type === 'anchor'"
+              style="padding: 8px 12px; border-radius: var(--radius-sm); background: var(--bg-secondary); opacity: 0.7; margin-left: 4px;">
+              <span class="text-xs" x-text="block.title" style="color: var(--text-secondary);"></span>
+              <span class="text-xs text-weak" style="margin-left: 8px;" x-text="block.timeRange"></span>
+            </div>
+
+            <!-- 固定任务 -->
+            <div x-show="block.type === 'fixed'"
+              style="padding: 12px 14px; border-radius: var(--radius-md); cursor: grab; margin-left: 4px; transition: all 0.25s ease;"
+              :style="{
+                background: block.color + '22',
+                border: block.locked ? '1px solid var(--timeline-color)' : '0.5px solid ' + block.color + '44',
+                opacity: block.completed ? 0.5 : 1,
+              }"
+              @dblclick="toggleTaskById(block.id)"
+              draggable="true"
+              @dragstart="dragTask(block, $event)"
+              @dragover.prevent
+              @drop="dropTask(block, $event)">
+              <div class="flex items-center gap-md">
+                <div class="checkbox" :class="{ checked: block.completed }" @click="toggleTaskById(block.id)">
+                  <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="flex-1">
+                  <p :style="block.completed ? 'text-decoration: line-through; color: var(--text-weak);' : ''" style="font-weight: 500; font-size: 13px;" x-text="block.title"></p>
+                  <div class="flex items-center gap-sm mt-sm">
+                    <span class="text-xs text-secondary" x-text="block.duration + 'min'"></span>
+                    <span class="tag" :class="'tag-' + block.tags[0]" x-show="block.tags.length" x-text="tagLabel(block.tags[0])" style="font-size: 10px;"></span>
+                    <svg x-show="block.recurring" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-weak)" stroke-width="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
+                    <svg x-show="block.locked" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  </div>
+                </div>
+                <button class="btn btn-ghost btn-sm" style="padding: 2px 6px; min-height: auto;" @click="toggleTaskType(block)"
+                  :title="block.type === 'fixed' ? '转为弹性任务' : '转为固定任务'">
+                  <span class="text-xs text-weak" x-text="block.type === 'fixed' ? '→弹性' : '→固定'"></span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 弹性任务 -->
+            <div x-show="block.type === 'flexible'"
+              style="padding: 10px 14px; border-radius: var(--radius-md); cursor: grab; margin-left: 4px; transition: all 0.25s ease;"
+              :style="{
+                background: block.color + '11',
+                border: '1px dashed ' + block.color + '55',
+                opacity: block.completed ? 0.4 : 0.75,
+              }"
+              @dblclick="toggleTaskById(block.id)"
+              draggable="true"
+              @dragstart="dragTask(block, $event)"
+              @dragover.prevent
+              @drop="dropTask(block, $event)">
+              <div class="flex items-center gap-md">
+                <div class="checkbox" :class="{ checked: block.completed }" @click="toggleTaskById(block.id)">
+                  <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6l3 3 5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <div class="flex-1">
+                  <p :style="block.completed ? 'text-decoration: line-through; color: var(--text-weak);' : ''" style="font-weight: 500; font-size: 13px;" x-text="block.title + '（弹性）'"></p>
+                  <div class="flex items-center gap-sm mt-sm">
+                    <span class="text-xs text-secondary" x-text="block.duration + 'min · 可延后'"></span>
+                    <span class="tag" :class="'tag-' + block.tags[0]" x-show="block.tags.length" x-text="tagLabel(block.tags[0])" style="font-size: 10px;"></span>
+                  </div>
+                </div>
+                <button class="btn btn-ghost btn-sm" style="padding: 2px 6px; min-height: auto;" @click="toggleTaskType(block)"
+                  title="转为固定任务">
+                  <span class="text-xs text-weak">→固定</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 缓冲间隙 -->
+            <div x-show="block.type === 'gap'"
+              style="margin-left: 12px; border-left: 2px solid var(--border-light); padding-left: 8px; display: flex; align-items: center;"
+              :style="'height: ' + block.height + 'px;'">
+              <span class="text-xs text-weak" x-text="block.label || '弹性缓冲'"></span>
+            </div>
+          </div>
+        </template>
+      </div>
+
+      <!-- 底部添加按钮 -->
+      <button class="btn btn-secondary w-full mt-lg" @click="page = 'nlp'"
+        x-show="timelineBlocks().length > 0">
+        + 智能添加任务
+      </button>
+    </div>
+  </div>
+  </template>
+
+  <!-- ========== 页面2：NLP智能输入 ========== -->
+  <template x-if="page === 'nlp'">
+  <div class="page active" id="page-nlp">
+    <div class="page-header">
+      <div>
+        <h1>智能输入</h1>
+        <p class="subtitle">一句话录入，自动解析</p>
+      </div>
+      <button class="btn btn-ghost btn-sm" @click="page = 'home'">返回</button>
+    </div>
+
+    <div class="page-content">
+      <!-- 输入区 -->
+      <div class="card" style="border-color: var(--accent); border-width: 1.5px;">
+        <input class="input" x-model="nlpInput" @input="nlpDebounce()"
+          placeholder="例如：明天下午三点开会讨论Q3计划 #工作 重要"
+          style="border: none; background: transparent; font-size: 15px; padding: 12px 0;"
+          autofocus>
+        <div class="flex gap-sm mt-sm" style="flex-wrap: wrap;">
+          <span class="tag tag-work" x-show="nlpResult.tags.includes('work')">工作</span>
+          <span class="tag tag-life" x-show="nlpResult.tags.includes('life')">生活</span>
+          <span class="tag tag-grow" x-show="nlpResult.tags.includes('grow')">成长</span>
+          <span class="tag tag-important" x-show="nlpResult.priority === 'high'">重要</span>
+        </div>
+      </div>
+
+      <!-- 实时解析预览 -->
+      <div class="card" x-show="nlpResult.title" x-transition>
+        <div class="card-title" style="margin-bottom: 12px;">解析结果</div>
+
+        <div class="flex flex-col gap-sm">
+          <div class="flex items-center gap-md" style="padding: 6px 0;">
+            <span class="text-sm text-secondary" style="width: 48px; flex-shrink: 0;">任务</span>
+            <span style="font-weight: 500;" x-text="nlpResult.title || '—'"></span>
+          </div>
+          <div class="flex items-center gap-md" style="padding: 6px 0;">
+            <span class="text-sm text-secondary" style="width: 48px; flex-shrink: 0;">时间</span>
+            <span x-text="nlpResult.timeLabel || '今天'" :class="nlpResult.time ? '' : 'text-weak'"></span>
+            <span class="text-xs text-weak" x-show="nlpResult.time" x-text="'(' + nlpResult.time + ')'"></span>
+          </div>
+          <div class="flex items-center gap-md" style="padding: 6px 0;">
+            <span class="text-sm text-secondary" style="width: 48px; flex-shrink: 0;">时长</span>
+            <span x-text="nlpResult.duration + '分钟'"></span>
+            <span class="text-xs text-weak" x-show="nlpResult.durationSource" x-text="nlpResult.durationSource"></span>
+          </div>
+          <div class="flex items-center gap-md" style="padding: 6px 0;">
+            <span class="text-sm text-secondary" style="width: 48px; flex-shrink: 0;">优先级</span>
+            <span x-text="nlpResult.priorityLabel" :class="nlpResult.priority === 'high' ? 'text-accent' : ''"></span>
+          </div>
+          <div class="flex items-center gap-md" style="padding: 6px 0;" x-show="nlpResult.suggestedGoal">
+            <span class="text-sm text-secondary" style="width: 48px; flex-shrink: 0;">关联</span>
+            <span class="tag" style="background: var(--goal-color); opacity: 0.35;" x-text="nlpResult.suggestedGoalTitle"></span>
+          </div>
+        </div>
+
+        <!-- 纠错提示 -->
+        <div class="hint-card mt-md" x-show="nlpResult.warning" x-transition>
+          <div class="title">注意</div>
+          <div class="desc" x-text="nlpResult.warning"></div>
+        </div>
+      </div>
+
+      <!-- 快捷模板 -->
+      <div class="card" x-show="nlpTemplates.length > 0">
+        <div class="card-title" style="margin-bottom: 8px;">常用模板</div>
+        <div class="flex gap-sm" style="flex-wrap: wrap;">
+          <template x-for="tpl in nlpTemplates" :key="tpl">
+            <button class="btn btn-sm btn-secondary" @click="applyTemplate(tpl)" x-text="tpl"></button>
+          </template>
+        </div>
+        <button class="btn btn-ghost btn-sm mt-sm" x-show="nlpInput && !nlpTemplates.includes(nlpInput)" @click="saveAsTemplate()">
+          保存为模板
+        </button>
+      </div>
+
+      <!-- 关联目标建议 -->
+      <div class="card" x-show="nlpSuggestions.length > 0 && nlpResult.title">
+        <div class="card-title" style="margin-bottom: 8px;">关联目标建议</div>
+        <template x-for="g in nlpSuggestions" :key="g.id">
+          <button class="btn btn-ghost btn-sm" style="display: block; width: 100%; text-align: left; margin-bottom: 4px;"
+            @click="nlpResult.suggestedGoal = g.id; nlpResult.suggestedGoalTitle = g.title">
+            <span x-text="g.title"></span>
+            <span class="text-xs text-weak" x-text="' · ' + g.kr[0]" x-show="g.kr && g.kr.length"></span>
+          </button>
+        </template>
+      </div>
+
+      <!-- 确认按钮 -->
+      <button class="btn btn-primary w-full mt-lg" @click="confirmNLP()" :disabled="!nlpResult.title">
+        确认添加
+      </button>
+
+      <!-- 微调选项 -->
+      <div class="card mt-md" x-show="nlpResult.title">
+        <div class="card-title" style="margin-bottom: 8px;">微调设置</div>
+        <div class="flex gap-sm" style="flex-wrap: wrap;">
+          <button class="btn btn-sm" :class="nlpResult.type === '固定' ? 'btn-primary' : 'btn-secondary'" @click="nlpResult.type = '固定'">固定任务</button>
+          <button class="btn btn-sm" :class="nlpResult.type === '弹性' ? 'btn-primary' : 'btn-secondary'" @click="nlpResult.type = '弹性'">弹性任务</button>
+        </div>
+        <div class="flex items-center gap-md mt-sm">
+          <span class="text-sm text-secondary">循环任务</span>
+          <label class="toggle">
+            <input type="checkbox" x-model="nlpResult.recurring">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="flex items-center gap-md mt-sm">
+          <span class="text-sm text-secondary">锁定（不可自动调整）</span>
+          <label class="toggle">
+            <input type="checkbox" x-model="nlpResult.locked">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 肌肉记忆提示 -->
+      <div class="hint-card mt-md" x-show="nlpMemoryHints.length > 0" x-transition>
+        <div class="title">基于你的习惯</div>
+        <template x-for="h in nlpMemoryHints" :key="h">
+          <div class="desc" x-text="h" style="margin-bottom: 2px;"></div>
+        </template>
+      </div>
+    </div>
+  </div>
+  </template>
+
+  <!-- ========== 页面3：目标管理 ========== -->
+  <template x-if="page === 'goal'">
+  <div class="page active" id="page-goal">
+    <div class="page-header">
+      <div>
+        <h1>目标管理</h1>
+        <p class="subtitle">年 · 季 · 月 · 周 · 日</p>
+      </div>
+      <button class="btn btn-primary btn-sm" @click="openGoalModal()">+ 新建目标</button>
+    </div>
+
+    <div class="page-content">
+      <!-- 五级拆解树 -->
+      <template x-for="goal in goalsByType('年')" :key="goal.id">
+        <div class="card">
+          <div class="card-header">
+            <span class="tag" style="background: var(--goal-color); opacity: 0.4;" x-text="goal.type + '度目标'"></span>
+            <button class="btn btn-ghost btn-sm text-sm" @click="editGoal(goal)">编辑</button>
+          </div>
+          <p class="card-title" x-text="goal.title"></p>
+          <p class="text-sm text-secondary mt-sm" x-text="'关键结果: ' + goal.kr.join(' | ')"></p>
+
+          <!-- 子目标 -->
+          <div class="mt-md flex flex-col gap-sm">
+            <template x-for="sub in getSubGoals(goal.id)" :key="sub.id">
+              <div class="flex items-center gap-sm" style="padding: 8px 12px; background: var(--bg-secondary); border-radius: var(--radius-sm);">
+                <span class="tag" :style="'background: ' + typeColor(sub.type) + '; opacity: 0.3;'" x-text="sub.type"></span>
+                <span class="flex-1 text-sm" x-text="sub.title"></span>
+                <span class="text-xs text-weak" x-text="sub.kr[0]"></span>
+              </div>
+            </template>
+          </div>
+
+          <!-- Anti-Goals -->
+          <div class="mt-md" x-show="goal.antiGoals && goal.antiGoals.length">
+            <p class="text-xs text-secondary" style="margin-bottom: 4px;">反目标护栏</p>
+            <template x-for="ag in goal.antiGoals" :key="ag">
+              <span class="tag" style="background: var(--contact-color); opacity: 0.2; margin-right: 4px; margin-bottom: 4px;" x-text="ag"></span>
+            </template>
+          </div>
+
+          <!-- If-Then -->
+          <div class="mt-sm" x-show="goal.ifThen && goal.ifThen.length">
+            <p class="text-xs text-secondary" style="margin-bottom: 4px;">障碍预演</p>
+            <template x-for="it in goal.ifThen" :key="it.if">
+              <p class="text-xs text-weak" x-text="'如果 ' + it.if + '，则 ' + it.then"></p>
+            </template>
+          </div>
+
+          <!-- 进度条 -->
+          <div class="mt-md" x-show="goal.kr.length > 0">
+            <div class="flex justify-between items-center" style="margin-bottom: 6px;">
+              <span class="text-xs text-secondary">本周进度</span>
+              <span class="text-xs text-accent" x-text="goalProgress(goal.id) + '%'"></span>
+            </div>
+            <div style="height: 4px; background: var(--bg-secondary); border-radius: 2px; overflow: hidden;">
+              <div :style="'height: 100%; width: ' + goalProgress(goal.id) + '%; background: var(--accent); border-radius: 2px; transition: width 0.5s ease-in-out;'"></div>
+            </div>
+          </div>
+
+          <!-- 本周ABC统计 -->
+          <div class="mt-sm flex gap-sm" style="flex-wrap: wrap;">
+            <span class="tag" style="background: var(--accent-light);" x-text="'A档 ' + weeklyABC(goal.id).A + '天'"></span>
+            <span class="tag" style="background: var(--task-color); opacity: 0.4;" x-text="'B档 ' + weeklyABC(goal.id).B + '天'"></span>
+            <span class="tag" style="background: var(--timeline-color); opacity: 0.4;" x-text="'C档 ' + weeklyABC(goal.id).C + '天'"></span>
+          </div>
+        </div>
+      </template>
+
+      <div class="empty-state" x-show="goals.length === 0">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-weak)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v8m-4-4h8"/></svg>
+        <p>还没有设定目标</p>
+        <p class="text-xs text-secondary mt-sm">设定一个年度目标，系统帮你逐层拆解</p>
+      </div>
+    </div>
+  </div>
+  </template>
+
+  <!-- ========== 页面4：打卡与热力图 ========== -->
+  <template x-if="page === 'checkin'">
+  <div class="page active" id="page-checkin">
+    <div class="page-header">
+      <div>
+        <h1>每日打卡</h1>
+        <p class="subtitle" x-text="'周' + currentWeekLabel()"></p>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <!-- 本周ABC档位总结 -->
+      <div class="card" style="border: none;">
+        <div class="flex justify-between items-center" style="margin-bottom: 12px;">
+          <span class="card-title">本周档位分布</span>
+          <span class="text-sm text-secondary" x-text="weekStats().total + '天已完成打卡'"></span>
+        </div>
+        <div class="flex gap-sm" style="margin-bottom: 8px;">
+          <div :style="'flex: ' + (weekStats().pctA || 0.1) + '; height: 8px; background: var(--accent); border-radius: 4px; transition: all 0.5s ease-in-out;'" x-show="weekStats().pctA > 0"></div>
+          <div :style="'flex: ' + (weekStats().pctB || 0.1) + '; height: 8px; background: var(--task-color); border-radius: 4px; transition: all 0.5s ease-in-out;'" x-show="weekStats().pctB > 0"></div>
+          <div :style="'flex: ' + (weekStats().pctC || 0.1) + '; height: 8px; background: var(--timeline-color); border-radius: 4px; transition: all 0.5s ease-in-out;'" x-show="weekStats().pctC > 0"></div>
+        </div>
+        <div class="flex gap-md text-xs text-secondary">
+          <span>▮ A档（完美日） <span class="text-accent" x-text="weekStats().A + '天'"></span></span>
+          <span>▮ B档（基础日） <span x-text="weekStats().B + '天'" style="color: var(--text-secondary);"></span></span>
+          <span>▮ C档（兜底日） <span x-text="weekStats().C + '天'" style="color: var(--text-secondary);"></span></span>
+        </div>
+      </div>
+
+      <!-- 今日打卡卡片 -->
+      <div class="card" style="border-color: var(--accent); border-width: 1.5px;">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="card-title">今日打卡</p>
+            <p class="text-sm text-secondary" x-text="todayCheckinDate()"></p>
+          </div>
+          <div x-show="!todayCheckedIn()" style="text-align: right;">
+            <span class="text-sm text-weak">等待打卡</span>
+          </div>
+          <div x-show="todayCheckedIn()" style="text-align: right;">
+            <span class="tag" :style="'background: ' + todayCheckinGradeColor() + '; opacity: 0.35; font-size: 14px; padding: 4px 16px;'" x-text="todayCheckinGrade() + '档'"></span>
+          </div>
+        </div>
+
+        <!-- 打卡选项 -->
+        <div class="mt-md" x-show="!todayCheckedIn() || todayCheckinEdit">
+          <p class="text-sm text-secondary" style="margin-bottom: 8px;">今天完成了哪些？</p>
+          <div class="flex gap-sm" style="margin-bottom: 12px;">
+            <button class="btn btn-sm" :class="tempCheckinGrade === 'A' ? 'btn-primary' : 'btn-secondary'"
+              @click="tempCheckinGrade = 'A'; tempCheckinNote = ''">
+              A档 · 完美日
+            </button>
+            <button class="btn btn-sm" :class="tempCheckinGrade === 'B' ? 'btn-primary' : 'btn-secondary'"
+              @click="tempCheckinGrade = 'B'; tempCheckinNote = ''">
+              B档 · 基础日
+            </button>
+            <button class="btn btn-sm" :class="tempCheckinGrade === 'C' ? 'btn-primary' : 'btn-secondary'"
+              @click="tempCheckinGrade = 'C'; tempCheckinNote = ''">
+              C档 · 兜底日
+            </button>
+          </div>
+
+          <div class="flex gap-sm items-center mt-sm" x-show="todayTasks().length > 0">
+            <span class="text-xs text-secondary">今日任务完成：</span>
+            <span class="text-xs" x-text="todayCompletedCount() + '/' + todayTasks().length"></span>
+            <button class="btn btn-ghost btn-sm text-xs" @click="autoCheckinGrade()">自动判定</button>
+          </div>
+
+          <input class="input mt-sm" x-model="tempCheckinNote" placeholder="备注（可选）：今天状态不错 / 下午有点累..."
+            style="font-size: 13px;">
+
+          <button class="btn btn-primary w-full mt-md" @click="submitCheckin()" x-text="todayCheckedIn() ? '更新打卡' : '完成打卡'"></button>
+
+          <button class="btn btn-ghost btn-sm w-full mt-sm" x-show="todayCheckedIn()" @click="todayCheckinEdit = !todayCheckinEdit">
+            <span x-text="todayCheckinEdit ? '取消编辑' : '修改今日打卡'"></span>
+          </button>
+        </div>
+
+        <!-- 已打卡状态 -->
+        <div x-show="todayCheckedIn() && !todayCheckinEdit">
+          <div class="mt-md flex flex-col gap-sm">
+            <p class="text-sm text-secondary" x-show="todayCheckinNote()" x-text="todayCheckinNote()"></p>
+          </div>
+          <div class="mt-sm">
+            <span class="text-xs text-weak" x-text="'连续打卡 ' + currentStreak() + ' 天'"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 月历热力图 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" x-text="currentMonthLabel() + ' 打卡记录'"></span>
+          <div class="flex gap-sm">
+            <button class="btn btn-ghost btn-sm text-xs" @click="heatmapOffset--">&lt;</button>
+            <button class="btn btn-ghost btn-sm text-xs" @click="heatmapOffset = 0">本月</button>
+            <button class="btn btn-ghost btn-sm text-xs" @click="heatmapOffset++">&gt;</button>
+          </div>
+        </div>
+
+        <!-- 星期头 -->
+        <div class="flex" style="margin-bottom: 4px;">
+          <template x-for="d in ['一','二','三','四','五','六','日']" :key="d">
+            <span class="text-xs text-weak" style="width: calc(100% / 7); text-align: center;" x-text="d"></span>
+          </template>
+        </div>
+
+        <!-- 热力图格子 -->
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;">
+          <template x-for="(day, idx) in heatmapDays()" :key="idx">
+            <div :style="{
+              aspectRatio: '1',
+              borderRadius: '6px',
+              background: day.grade === 'A' ? 'var(--accent)' :
+                          day.grade === 'B' ? 'var(--task-color)' :
+                          day.grade === 'C' ? 'var(--timeline-color)' :
+                          day.inMonth ? 'var(--bg-secondary)' : 'transparent',
+              opacity: day.grade ? 0.6 : (day.inMonth ? 0.3 : 0),
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: day.inMonth ? 'pointer' : 'default',
+              fontSize: '11px', color: day.grade ? 'white' : 'var(--text-weak)',
+              fontWeight: day.isToday ? '500' : '400',
+              border: day.isToday ? '1.5px solid var(--accent)' : 'none',
+            }" @click="day.inMonth && openDayDetail(day.date)" :title="day.label">
+              <span x-text="day.dayNum" x-show="!day.grade || day.grade === 'C'"></span>
+              <span x-text="day.grade" x-show="day.grade && day.grade !== 'C'"></span>
+            </div>
+          </template>
+        </div>
+
+        <!-- 图例 -->
+        <div class="flex gap-md mt-sm text-xs text-weak items-center">
+          <span>▮ A档</span>
+          <span>▮ B档</span>
+          <span>▮ C档</span>
+          <span class="flex-1"></span>
+          <span>今日边框</span>
+        </div>
+      </div>
+
+      <!-- Streak 展示（零焦虑版） -->
+      <div class="hint-card" x-show="currentStreak() > 0">
+        <div class="title">连续记录</div>
+        <div class="desc" x-text="'你已经连续 ' + currentStreak() + ' 天记录了打卡，保持自己的节奏就好。'"></div>
+      </div>
+      <div class="hint-card" x-show="currentStreak() === 0">
+        <div class="title">今天还没打卡</div>
+        <div class="desc">没关系，打卡是为了自己，不是任务。</div>
+      </div>
+    </div>
+  </div>
+  </template>
+
+  <!-- ========== 页面5：番茄钟 ========== -->
+  <template x-if="page === 'pomodoro'">
+  <div class="page active" id="page-pomodoro">
+    <div class="page-header"><h1>番茄钟</h1></div>
+    <div class="page-content text-center">
+      <div style="position: relative; width: 200px; height: 200px; margin: 32px auto;">
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="85" fill="none" stroke="var(--border)" stroke-width="8"/>
+          <circle cx="100" cy="100" r="85" fill="none" stroke="var(--pomodoro-color)" stroke-width="8"
+            stroke-linecap="round" :stroke-dasharray="2 * Math.PI * 85"
+            :stroke-dashoffset="2 * Math.PI * 85 * (1 - pomodoroProgress)"
+            style="transform: rotate(-90deg); transform-origin: 100px 100px; transition: stroke-dashoffset 1s linear;"/>
+        </svg>
+        <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <span style="font-size: 40px; font-weight: 500;" x-text="formatTime(pomodoroRemaining)"></span>
+          <span class="text-sm text-secondary" x-show="pomodoroRunning">剩余</span>
+          <span class="text-sm text-secondary" x-show="!pomodoroRunning">准备开始</span>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-center gap-sm mt-md">
+        <button class="btn btn-sm" :class="pomodoroMode === 'standard' ? 'btn-primary' : 'btn-secondary'" @click="setPomodoroMode('standard')">标准 25min</button>
+        <button class="btn btn-sm" :class="pomodoroMode === 'sprint' ? 'btn-primary' : 'btn-secondary'" @click="setPomodoroMode('sprint')">冲刺 10min</button>
+        <button class="btn btn-sm" :class="pomodoroMode === 'deep' ? 'btn-primary' : 'btn-secondary'" @click="setPomodoroMode('deep')">深度 50min</button>
+      </div>
+
+      <button class="btn btn-primary mt-lg" style="width: 200px;" @click="togglePomodoro()" x-text="pomodoroRunning ? '暂停' : '开始专注'"></button>
+      <button class="btn btn-ghost btn-sm mt-sm" x-show="pomodoroRunning" @click="stopPomodoro()">结束当前番茄</button>
+
+      <p class="text-sm text-secondary mt-lg" x-text="'今日已完成 ' + todayPomodoros() + ' 个番茄'"></p>
+    </div>
+  </div>
+  </template>
+
+  <!-- ========== 页面4：人脉 ========== -->
+  <template x-if="page === 'contacts'">
+  <div class="page active" id="page-contacts">
+    <div class="page-header">
+      <h1>人脉</h1>
+      <button class="btn btn-primary btn-sm" @click="openContactModal()">+ 添加</button>
+    </div>
+    <div class="page-content">
+      <!-- 分层筛选 -->
+      <div class="flex gap-sm" style="overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px;">
+        <template x-for="l in ['L1','L2','L3','L4','L5']" :key="l">
+          <button class="btn btn-sm" :class="contactFilter === l ? 'btn-primary' : 'btn-secondary'"
+            @click="contactFilter = contactFilter === l ? null : l" x-text="l + ' ' + levelLabel(l)"></button>
+        </template>
+      </div>
+
+      <template x-for="c in filteredContacts()" :key="c.id">
+        <div class="card">
+          <div class="flex items-center gap-md">
+            <div :style="'width: 40px; height: 40px; border-radius: 50%; background: var(--contact-color); opacity: 0.4; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 500; color: var(--text-primary); flex-shrink: 0;'"
+              x-text="c.name[0]"></div>
+            <div class="flex-1">
+              <p style="font-weight: 500;" x-text="c.name"></p>
+              <p class="text-sm text-secondary" x-text="c.notes || '暂无备注'"></p>
+            </div>
+            <span class="tag" :style="'background: var(--contact-color); opacity: ' + (0.1 + 0.1 * c.level)" x-text="'L' + c.level"></span>
+          </div>
+          <div class="flex gap-sm mt-sm" x-show="c.preferences">
+            <template x-for="p in c.preferences" :key="p">
+              <span class="tag tag-important" x-text="p"></span>
+            </template>
+          </div>
+          <div class="flex justify-between items-center mt-sm">
+            <span class="text-xs text-weak" x-text="'上次联系: ' + c.lastContact"></span>
+            <button class="btn btn-ghost btn-sm text-sm" @click="editContact(c)">编辑</button>
+          </div>
+        </div>
+      </template>
+
+      <div class="empty-state" x-show="contacts.length === 0">
+        <p>还没有添加人脉</p>
+      </div>
+    </div>
+  </div>
+  </template>
+
+  <!-- ========== 页面6：AI 分析仪表盘 ========== -->
+  <template x-if="page === 'insight'">
+  <div class="page active" id="page-insight">
+    <div class="page-header">
+      <div>
+        <h1>AI 洞察</h1>
+        <p class="subtitle" x-text="'基于你过去 ' + insightDays() + ' 天的数据'"></p>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <!-- 精力状态大卡 -->
+      <div class="card" style="border: none; background: var(--bg-secondary);">
+        <div class="flex items-center gap-lg">
+          <div :style="'width: 64px; height: 64px; border-radius: 50%; background: ' + energyColor() + '; opacity: 0.15; display: flex; align-items: center; justify-content: center;'">
+            <div :style="'width: 40px; height: 40px; border-radius: 50%; background: ' + energyColor() + '; opacity: 0.3;'"></div>
+          </div>
+          <div>
+            <p style="font-size: 18px; font-weight: 500;" x-text="insightEnergyLabel()"></p>
+            <p class="text-sm text-secondary mt-sm" x-text="insightEnergyDesc()"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 本周精力趋势图 -->
+      <div class="card">
+        <div class="card-title">本周精力趋势</div>
+        <div style="position: relative; height: 120px; margin-top: 12px;">
+          <!-- Y轴标签 -->
+          <div style="position: absolute; left: 0; top: 0; bottom: 0; width: 24px; display: flex; flex-direction: column; justify-content: space-between;">
+            <span class="text-xs text-weak">100%</span>
+            <span class="text-xs text-weak">50%</span>
+            <span class="text-xs text-weak">0%</span>
+          </div>
+          <!-- 网格线 -->
+          <div style="position: absolute; left: 28px; right: 0; top: 0; bottom: 0;">
+            <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: var(--border);"></div>
+            <div style="position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--border);"></div>
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 1px; background: var(--border);"></div>
+          </div>
+          <!-- 柱状图 -->
+          <div style="position: absolute; left: 32px; right: 8px; bottom: 0; top: 0; display: flex; align-items: flex-end; justify-content: space-around;">
+            <template x-for="(d, idx) in weekEnergyData()" :key="idx">
+              <div style="display: flex; flex-direction: column; align-items: center; flex: 1;">
+                <div :style="{
+                  width: '24px',
+                  height: (d.pct * 100) + '%',
+                  background: d.pct >= 0.7 ? 'var(--accent)' : d.pct >= 0.3 ? 'var(--task-color)' : 'var(--timeline-color)',
+                  borderRadius: '4px 4px 0 0',
+                  opacity: d.pct > 0 ? 0.7 : 0.2,
+                  transition: 'height 0.5s ease-in-out',
+                }"></div>
+                <span class="text-xs text-weak mt-sm" x-text="d.label"></span>
+              </div>
+            </template>
+          </div>
+        </div>
+        <div class="flex gap-md mt-md text-xs text-weak">
+          <span>▮ A档（高能）</span>
+          <span>▮ B档（正常）</span>
+          <span>▮ C档（低能）</span>
+        </div>
+      </div>
+
+      <!-- 时间分布 -->
+      <div class="card">
+        <div class="card-title">本周时间分布</div>
+        <div class="mt-md" style="display: flex; gap: 12px; align-items: flex-end; height: 100px;">
+          <template x-for="seg in timeDistribution()" :key="seg.label">
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+              <span class="text-xs text-secondary" style="margin-bottom: 6px;" x-text="seg.hours + 'h'"></span>
+              <div :style="{
+                width: '100%',
+                height: (seg.pct * 100) + '%',
+                background: seg.color,
+                borderRadius: '6px 6px 0 0',
+                opacity: 0.6,
+                minHeight: seg.hours > 0 ? '12px' : '4px',
+                transition: 'height 0.5s ease-in-out',
+              }"></div>
+              <span class="text-xs text-secondary mt-sm" x-text="seg.label"></span>
+            </div>
+          </template>
+        </div>
+        <p class="text-xs text-weak mt-md" x-text="timeDistAdvice()"></p>
+      </div>
+
+      <!-- 番茄钟统计 -->
+      <div class="card">
+        <div class="card-title">本周专注统计</div>
+        <div class="flex justify-between items-center mt-sm">
+          <div class="text-center">
+            <span style="font-size: 24px; font-weight: 500; color: var(--accent);" x-text="weekPomodoroCount()"></span>
+            <p class="text-xs text-secondary">番茄完成</p>
+          </div>
+          <div class="text-center">
+            <span style="font-size: 24px; font-weight: 500;" x-text="weekFocusHours() + 'h'"></span>
+            <p class="text-xs text-secondary">专注时长</p>
+          </div>
+          <div class="text-center">
+            <span style="font-size: 24px; font-weight: 500;" x-text="weekAvgFocus() + 'min'"></span>
+            <p class="text-xs text-secondary">平均每次</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI 建议列表 -->
+      <div class="card" x-show="aiInsights().length > 0">
+        <div class="card-title" style="margin-bottom: 12px;">AI 建议</div>
+        <template x-for="ins in aiInsights()" :key="ins.text">
+          <div :style="{
+            padding: '12px',
+            borderRadius: 'var(--radius-sm)',
+            background: ins.level === 'L3' ? 'var(--contact-color)' + '18' :
+                        ins.level === 'L2' ? 'var(--hint-color)' + '40' :
+                        'var(--bg-secondary)',
+            marginBottom: '8px',
+            borderLeft: '3px solid ' + (ins.level === 'L3' ? 'var(--contact-color)' :
+                                         ins.level === 'L2' ? 'var(--accent)' : 'var(--border)'),
+          }">
+            <div class="flex justify-between items-center" style="margin-bottom: 4px;">
+              <span class="tag" :style="'background: ' + (ins.level === 'L3' ? 'var(--contact-color)' : ins.level === 'L2' ? 'var(--accent)' : 'var(--border)') + '; opacity: 0.3;'" x-text="ins.level + ' · ' + ins.category"></span>
+            </div>
+            <p class="text-sm" x-text="ins.text"></p>
+            <button class="btn btn-ghost btn-sm text-xs mt-sm" x-show="ins.action" @click="doAction(ins.action)" x-text="ins.actionLabel"></button>
+          </div>
+        </template>
+      </div>
+
+      <!-- 话术风格切换 -->
+      <div class="card">
+        <div class="card-title">AI 话术风格</div>
+        <div class="flex gap-sm mt-sm">
+          <button class="btn btn-sm flex-1" :class="aiTone === 'companion' ? 'btn-primary' : 'btn-secondary'"
+            @click="aiTone = 'companion'; saveData()">
+            <div>陪伴型</div>
+            <div class="text-xs text-weak">温暖鼓励</div>
+          </button>
+          <button class="btn btn-sm flex-1" :class="aiTone === 'efficiency' ? 'btn-primary' : 'btn-secondary'"
+            @click="aiTone = 'efficiency'; saveData()">
+            <div>效率型</div>
+            <div class="text-xs text-weak">直接建议</div>
+          </button>
+          <button class="btn btn-sm flex-1" :class="aiTone === 'concise' ? 'btn-primary' : 'btn-secondary'"
+            @click="aiTone = 'concise'; saveData()">
+            <div>简洁型</div>
+            <div class="text-xs text-weak">只给排序</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  </template>
+
+  <!-- ========== 页面7：回顾 ========== -->
+  <template x-if="page === 'review'">
+  <div class="page active" id="page-review">
+    <div class="page-header"><h1>本周回顾</h1></div>
+    <div class="page-content">
+      <!-- 数字断舍离概览 -->
+      <div class="card" style="border: none; background: var(--bg-secondary);">
+        <div class="flex justify-between items-center" style="margin-bottom: 16px;">
+          <span class="card-title">本周概览</span>
+          <span class="text-xs text-weak" x-text="'Week ' + getWeekNumber()"></span>
+        </div>
+        <div class="flex flex-col gap-md">
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary">专注时间</span>
+            <span class="text-sm" style="font-weight: 500;" x-text="fuzzyFocusLabel()"></span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary">任务完成</span>
+            <span class="text-sm" style="font-weight: 500;" x-text="fuzzyTaskLabel()"></span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary">休息质量</span>
+            <span class="text-sm" style="font-weight: 500;" x-text="fuzzyRestLabel()"></span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-sm text-secondary">与上周对比</span>
+            <span class="text-sm" :style="'font-weight: 500; color: ' + weekTrendColor();" x-text="weekTrendLabel()"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABC档位回顾 -->
+      <div class="card">
+        <div class="card-title">本周档位</div>
+        <div class="flex gap-sm mt-md" style="overflow-x: auto;">
+          <template x-for="day in weekDayDetails()" :key="day.date">
+            <div :style="{
+              flex: '0 0 48px', textAlign: 'center', padding: '8px 4px',
+              borderRadius: 'var(--radius-sm)',
+              background: day.grade === 'A' ? 'var(--accent-light)' :
+                          day.grade === 'B' ? 'var(--tag-work)' :
+                          day.grade === 'C' ? 'var(--tag-life)' : 'var(--bg-secondary)',
+              border: day.isToday ? '1.5px solid var(--accent)' : 'none',
+            }">
+              <span class="text-xs text-weak" x-text="day.dayName"></span>
+              <div :style="{
+                fontSize: '16px', fontWeight: '500', marginTop: '4px',
+                color: day.grade === 'A' ? 'var(--accent)' :
+                       day.grade === 'B' ? 'var(--text-primary)' : 'var(--text-secondary)',
+              }" x-text="day.grade || '—'"></div>
+            </div>
+          </template>
+        </div>
+        <p class="text-xs text-weak mt-sm" x-text="weekGradeSummary()"></p>
+      </div>
+
+      <!-- 本周高光（AI自动提炼） -->
+      <div class="card">
+        <div class="card-title">本周高光</div>
+        <div class="mt-sm flex flex-col gap-sm">
+          <template x-for="h in autoHighlights()" :key="h">
+            <div class="flex items-center gap-sm" style="padding: 8px 12px; background: var(--bg-secondary); border-radius: var(--radius-sm);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--hint-color)" stroke="var(--accent)" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span class="text-sm" x-text="h"></span>
+            </div>
+          </template>
+          <template x-for="h in weeklyHighlights" :key="h">
+            <div class="flex items-center gap-sm" style="padding: 8px 12px; background: var(--bg-secondary); border-radius: var(--radius-sm); opacity: 0.6;">
+              <span class="text-sm" x-text="h"></span>
+            </div>
+          </template>
+          <button class="btn btn-ghost btn-sm text-sm" @click="addHighlight()">+ 补充一条</button>
+        </div>
+      </div>
+
+      <!-- 经验反哺 -->
+      <div class="card">
+        <div class="card-title">经验反哺 · 下周建议</div>
+        <div class="mt-sm flex flex-col gap-sm">
+          <template x-for="tip in weeklyTips()" :key="tip">
+            <div class="flex items-start gap-sm" style="padding: 8px 0;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="margin-top: 2px; flex-shrink: 0;"><polyline points="9 18 15 12 9 6"/></svg>
+              <span class="text-sm text-secondary" x-text="tip"></span>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- 里程碑 -->
+      <div class="card" x-show="milestones().length > 0">
+        <div class="card-title">里程碑</div>
+        <div class="mt-sm flex flex-col gap-sm">
+          <template x-for="m in milestones()" :key="m.text">
+            <div class="flex items-center gap-sm" style="padding: 8px 12px; background: var(--hint-color); border-radius: var(--radius-sm);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="text-sm" x-text="m.text"></span>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+  </div>
+  </template>
+
+  <!-- ========== 设置页面 ========== -->
+  <template x-if="page === 'settings'">
+  <div class="page active" id="page-settings">
+    <div class="page-header"><h1>设置</h1></div>
+    <div class="page-content">
+      <div class="card">
+        <div class="card-title">深色模式</div>
+        <div class="flex justify-between items-center mt-sm">
+          <span class="text-sm text-secondary">跟随系统或手动切换</span>
+          <label class="toggle">
+            <input type="checkbox" x-model="darkMode" @change="toggleDarkMode()">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">AI 话术风格</div>
+        <div class="flex gap-sm mt-sm">
+          <button class="btn btn-sm" :class="aiTone === 'companion' ? 'btn-primary' : 'btn-secondary'" @click="aiTone = 'companion'">陪伴型</button>
+          <button class="btn btn-sm" :class="aiTone === 'efficiency' ? 'btn-primary' : 'btn-secondary'" @click="aiTone = 'efficiency'">效率型</button>
+          <button class="btn btn-sm" :class="aiTone === 'concise' ? 'btn-primary' : 'btn-secondary'" @click="aiTone = 'concise'">简洁型</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">留白模式</div>
+        <div class="flex justify-between items-center mt-sm">
+          <span class="text-sm text-secondary">在时间表中预留缓冲空间</span>
+          <label class="toggle">
+            <input type="checkbox" x-model="whiteSpaceEnabled">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="flex justify-between items-center mt-md" x-show="whiteSpaceEnabled">
+          <span class="text-sm">留白比例</span>
+          <span class="text-sm text-accent" x-text="whiteSpaceRatio + '%'"></span>
+        </div>
+        <input type="range" class="range-slider mt-sm" x-show="whiteSpaceEnabled" min="10" max="40" step="5" x-model="whiteSpaceRatio">
+      </div>
+
+      <div class="card">
+        <div class="card-title">系统弹性</div>
+        <button class="btn btn-secondary w-full mt-sm" @click="page = 'resilience'">突发事件处理</button>
+      </div>
+
+      <button class="btn btn-secondary w-full mt-lg" @click="page = 'review'">查看本周回顾</button>
+      <button class="btn btn-secondary w-full mt-sm" @click="exportData()">导出数据</button>
+      <button class="btn btn-ghost btn-sm w-full mt-sm" @click="resetData()">重置所有数据</button>
+    </div>
+  </div>
+  </template>
+
+  <!-- ========== 页面8：系统弹性 ========== -->
+  <template x-if="page === 'resilience'">
+  <div class="page active" id="page-resilience">
+    <div class="page-header">
+      <h1>系统弹性</h1>
+      <button class="btn btn-ghost btn-sm" @click="page = 'settings'">返回</button>
+    </div>
+    <div class="page-content">
+      <!-- 突发模版 -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom: 12px;">遇到突发情况？</div>
+        <p class="text-sm text-secondary" style="margin-bottom: 12px;">选择一个场景，系统自动调整今日安排</p>
+        <div class="flex gap-sm" style="flex-wrap: wrap; margin-bottom: 12px;">
+          <template x-for="tpl in emergencyTemplates" :key="tpl.id">
+            <button class="btn btn-sm" :class="emergencySelected === tpl.id ? 'btn-primary' : 'btn-secondary'"
+              @click="selectEmergency(tpl)">
+              <span x-text="tpl.label"></span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- 多方案重排 -->
+      <div class="card" x-show="emergencySelected" x-transition>
+        <div class="card-title" style="margin-bottom: 12px;">为你准备了调整方案</div>
+        <p class="text-sm text-secondary" style="margin-bottom: 12px;">选择你偏好的方案，系统自动执行</p>
+
+        <div class="flex flex-col gap-sm">
+          <button class="btn" style="display: block; width: 100%; text-align: left; padding: 14px; border-radius: var(--radius-md); background: var(--card-bg); border: 1.5px solid var(--accent);"
+            @click="applyEmergencyPlan('A')">
+            <div class="flex justify-between items-center">
+              <span style="font-weight: 500;">方案A：顺延至明日</span>
+              <span class="tag" style="background: var(--accent); color: white; opacity: 0.9;">推荐</span>
+            </div>
+            <p class="text-xs text-secondary mt-sm">将未完成的任务平移至明天，保持今日节奏不受影响。</p>
+          </button>
+
+          <button class="btn" style="display: block; width: 100%; text-align: left; padding: 14px; border-radius: var(--radius-md); background: var(--card-bg); border: 0.5px solid var(--border);"
+            @click="applyEmergencyPlan('B')">
+            <span style="font-weight: 500;">方案B：压缩今日任务</span>
+            <p class="text-xs text-secondary mt-sm">删减低优先级任务，保核心事项。</p>
+          </button>
+
+          <button class="btn" style="display: block; width: 100%; text-align: left; padding: 14px; border-radius: var(--radius-md); background: var(--card-bg); border: 0.5px solid var(--border);"
+            @click="applyEmergencyPlan('C')">
+            <span style="font-weight: 500;">方案C：启动兜底日（C档）</span>
+            <p class="text-xs text-secondary mt-sm">只保留最基本的事项，其余暂停。</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- 权限锁管理 -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom: 12px;">权限锁</div>
+        <p class="text-sm text-secondary" style="margin-bottom: 12px;">标记不可被自动调整的事项</p>
+        <template x-for="task in lockedTasks()" :key="task.id">
+          <div class="flex items-center justify-between" style="padding: 10px 0; border-bottom: 0.5px solid var(--border);">
+            <div class="flex items-center gap-sm">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <span class="text-sm" x-text="task.title"></span>
+            </div>
+            <button class="btn btn-ghost btn-sm text-xs" @click="toggleLock(task)">解锁</button>
+          </div>
+        </template>
+        <div class="hint-card mt-md" x-show="lockedTasks().length === 0">
+          <div class="title">暂无锁定事项</div>
+          <div class="desc">在任务列表中标记重要事项，系统在调整时将自动避开。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  </template>
+
+  <!-- ========== 底部导航 ========== -->
+  <nav class="bottom-nav">
+    <button class="nav-item" :class="{ active: page === 'home' }" @click="page = 'home'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      首页
+    </button>
+    <button class="nav-item" :class="{ active: page === 'nlp' }" @click="page = 'nlp'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      录入
+    </button>
+    <button class="nav-item" :class="{ active: page === 'checkin' }" @click="page = 'checkin'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      打卡
+    </button>
+    <button class="nav-item" :class="{ active: page === 'insight' }" @click="page = 'insight'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      洞察
+    </button>
+    <button class="nav-item" :class="{ active: ['goal','pomodoro','contacts','review','settings','resilience'].includes(page) }" @click="moreMenuOpen = !moreMenuOpen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      更多
+    </button>
+  </nav>
+
+  <!-- ========== 更多菜单 ========== -->
+  <div x-show="moreMenuOpen" @click="moreMenuOpen = false" x-transition
+    style="position: fixed; inset: 0; z-index: 99; background: rgba(0,0,0,0.15);">
+  </div>
+  <div x-show="moreMenuOpen" x-transition
+    style="position: fixed; bottom: 72px; left: 50%; transform: translateX(-50%); width: calc(100% - 48px); max-width: 432px; background: var(--card-bg); border-radius: var(--radius-lg); padding: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); z-index: 100; border: 0.5px solid var(--border);">
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;">
+      <button class="btn btn-ghost" style="flex-direction: column; padding: 14px 8px; gap: 6px;" @click="page = 'goal'; moreMenuOpen = false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+        <span class="text-xs">目标</span>
+      </button>
+      <button class="btn btn-ghost" style="flex-direction: column; padding: 14px 8px; gap: 6px;" @click="page = 'pomodoro'; moreMenuOpen = false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="text-xs">番茄钟</span>
+      </button>
+      <button class="btn btn-ghost" style="flex-direction: column; padding: 14px 8px; gap: 6px;" @click="page = 'contacts'; moreMenuOpen = false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <span class="text-xs">人脉</span>
+      </button>
+      <button class="btn btn-ghost" style="flex-direction: column; padding: 14px 8px; gap: 6px;" @click="page = 'review'; moreMenuOpen = false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        <span class="text-xs">回顾</span>
+      </button>
+      <button class="btn btn-ghost" style="flex-direction: column; padding: 14px 8px; gap: 6px;" @click="page = 'resilience'; moreMenuOpen = false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span class="text-xs">弹性</span>
+      </button>
+      <button class="btn btn-ghost" style="flex-direction: column; padding: 14px 8px; gap: 6px;" @click="page = 'settings'; moreMenuOpen = false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <span class="text-xs">设置</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ========== 目标编辑模态框 ========== -->
+  <div class="modal-overlay" x-show="showGoalModal" @click.self="showGoalModal = false" x-transition>
+    <div>
+      <div class="flex justify-between items-center" style="margin-bottom: 20px;">
+        <h3 style="font-size: 18px; font-weight: 500;" x-text="editingGoal ? '编辑目标' : '新建目标'"></h3>
+        <button class="btn btn-ghost btn-sm" @click="showGoalModal = false">关闭</button>
+      </div>
+
+      <label class="text-sm" style="display: block; margin-bottom: 6px;">目标类型</label>
+      <select class="input" x-model="goalForm.type" style="margin-bottom: 12px;">
+        <option value="年">年度目标</option>
+        <option value="季">季度目标</option>
+        <option value="月">月度目标</option>
+        <option value="周">周目标</option>
+        <option value="日">日目标</option>
+      </select>
+
+      <label class="text-sm" style="display: block; margin-bottom: 6px;">目标标题</label>
+      <input class="input" x-model="goalForm.title" placeholder="例如：通过PMP认证" style="margin-bottom: 12px;">
+
+      <label class="text-sm" style="display: block; margin-bottom: 6px;">关键结果（每行一个）</label>
+      <textarea class="input" x-model="goalForm.krText" placeholder="学完35学时课程&#10;模考分数达75%&#10;完成3次模拟考试" rows="3" style="margin-bottom: 12px;"></textarea>
+
+      <label class="text-sm" style="display: block; margin-bottom: 6px;">上级目标</label>
+      <select class="input" x-model="goalForm.parentId" style="margin-bottom: 12px;">
+        <option value="">无（顶层目标）</option>
+        <template x-for="g in goals" :key="g.id">
+          <option :value="g.id" x-text="g.title" x-show="g.id !== editingGoal?.id"></option>
+        </template>
+      </select>
+
+      <label class="text-sm" style="display: block; margin-bottom: 6px;">反目标护栏（每行一个）</label>
+      <textarea class="input" x-model="goalForm.antiGoalsText" placeholder="不要为了考证牺牲睡眠&#10;不要连续三周不运动" rows="2" style="margin-bottom: 12px;"></textarea>
+
+      <button class="btn btn-primary w-full" @click="saveGoal()" x-text="editingGoal ? '保存修改' : '创建目标'"></button>
+      <button class="btn btn-ghost btn-sm w-full mt-sm" x-show="editingGoal" @click="deleteGoal(editingGoal)">删除此目标</button>
+    </div>
+  </div>
+
+  <!-- ========== 快速添加任务模态框 ========== -->
+  <div class="modal-overlay" x-show="openQuickAdd" @click.self="openQuickAdd = false" x-transition>
+    <div>
+      <div class="flex justify-between items-center" style="margin-bottom: 20px;">
+        <h3 style="font-size: 18px; font-weight: 500;">快速添加任务</h3>
+        <button class="btn btn-ghost btn-sm" @click="openQuickAdd = false">关闭</button>
+      </div>
+
+      <label class="text-sm" style="display: block; margin-bottom: 6px;">任务描述</label>
+      <input class="input" x-model="quickTaskForm.title" placeholder="例如：下午3点开会讨论项目方案 #工作" style="margin-bottom: 12px;">
+
+      <div class="flex gap-sm" style="margin-bottom: 12px;">
+        <button class="btn btn-sm" :class="quickTaskForm.tag === 'work' ? 'btn-primary' : 'btn-secondary'" @click="quickTaskForm.tag = 'work'">工作</button>
+        <button class="btn btn-sm" :class="quickTaskForm.tag === 'life' ? 'btn-primary' : 'btn-secondary'" @click="quickTaskForm.tag = 'life'">生活</button>
+        <button class="btn btn-sm" :class="quickTaskForm.tag === 'grow' ? 'btn-primary' : 'btn-secondary'" @click="quickTaskForm.tag = 'grow'">成长</button>
+      </div>
+
+      <button class="btn btn-primary w-full" @click="quickAddTask()">添加任务</button>
+    </div>
+  </div>
+
+  <!-- ========== PWA 安装提示 ========== -->
+  <div x-show="pwaInstallVisible" x-transition
+    style="position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); width: calc(100% - 48px); max-width: 432px; background: var(--card-bg); border-radius: var(--radius-lg); padding: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); z-index: 150; border: 0.5px solid var(--border);">
+    <div class="flex items-center gap-md">
+      <div style="width: 40px; height: 40px; border-radius: 10px; background: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </div>
+      <div class="flex-1">
+        <p style="font-weight: 500; font-size: 13px;">添加到主屏幕</p>
+        <p class="text-xs text-secondary">随时查看你的时间轴和打卡记录</p>
+      </div>
+      <div class="flex gap-sm">
+        <button class="btn btn-ghost btn-sm text-xs" @click="dismissPWA()">暂不</button>
+        <button class="btn btn-primary btn-sm" @click="installPWA()">添加</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function app() {
+  return {
+    // ===== 路由 =====
+    page: 'home',
+    moreMenuOpen: false,
+
+    // ===== 设置 =====
+    darkMode: false,
+    aiTone: 'companion',
+    whiteSpaceEnabled: true,
+    whiteSpaceRatio: 20,
+
+    // ===== 数据存储 =====
+    goals: [],
+    tasks: [],
+    pomodoros: [],
+    contacts: [],
+    checkins: [],
+    settings: {},
+    weeklyHighlights: [],
+
+    // ===== 番茄钟状态 =====
+    pomodoroMode: 'standard',
+    pomodoroRunning: false,
+    pomodoroRemaining: 25 * 60,
+    pomodoroTotal: 25 * 60,
+    pomodoroTimer: null,
+
+    // ===== 表单 =====
+    showGoalModal: false,
+    editingGoal: null,
+    goalForm: { type: '年', title: '', krText: '', parentId: '', antiGoalsText: '' },
+
+    openQuickAdd: false,
+    quickTaskForm: { title: '', tag: 'work' },
+
+    // ===== NLP 智能输入 =====
+    nlpInput: '',
+    nlpResult: { title: '', time: '', timeLabel: '', duration: 30, durationSource: '', priority: 'normal', priorityLabel: '普通', tags: [], type: '固定', recurring: false, locked: false, suggestedGoal: '', suggestedGoalTitle: '', warning: '' },
+    nlpTemplates: [],
+    nlpSuggestions: [],
+    nlpMemoryHints: [],
+    nlpHistory: [],
+
+    // ===== 打卡 =====
+    heatmapOffset: 0,
+    tempCheckinGrade: 'B',
+    tempCheckinNote: '',
+    todayCheckinEdit: false,
+
+    contactFilter: null,
+    aiTip: null,
+    _dragData: null,
+
+    // ===== 计算属性 =====
+    get todayStr() {
+      const d = new Date();
+      return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日 · ' + ['日','一','二','三','四','五','六'][d.getDay()];
+    },
+    get pomodoroProgress() {
+      return this.pomodoroTotal > 0 ? this.pomodoroRemaining / this.pomodoroTotal : 1;
+    },
+
+    // ===== 初始化 =====
+    init() {
+      this.loadData();
+      this.checkDarkMode();
+      this.generateAiTip();
+      this.registerSW();
+      this.showPWAInstallPrompt();
+    },
+
+    registerSW() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      }
+    },
+
+    _pwaInstallEvent: null,
+    _pwaDismissedAt: null,
+    showPWAInstallPrompt() {
+      window.addEventListener('beforeinstallprompt', e => {
+        e.preventDefault();
+        this._pwaInstallEvent = e;
+        // 仅在第5次访问或7天后提示
+        const lastDismiss = localStorage.getItem('pwa_dismissed');
+        const visitCount = parseInt(localStorage.getItem('visit_count') || '0') + 1;
+        localStorage.setItem('visit_count', visitCount);
+        if (lastDismiss && (Date.now() - parseInt(lastDismiss) < 7 * 86400000)) return;
+        if (visitCount < 5 && !lastDismiss) return;
+        // 延迟3秒显示，不打断用户
+        setTimeout(() => {
+          this.pwaInstallVisible = true;
+        }, 3000);
+      });
+    },
+    pwaInstallVisible: false,
+    installPWA() {
+      if (this._pwaInstallEvent) {
+        this._pwaInstallEvent.prompt();
+        this._pwaInstallVisible = false;
+      }
+    },
+    dismissPWA() {
+      this.pwaInstallVisible = false;
+      localStorage.setItem('pwa_dismissed', Date.now().toString());
+    },
+
+    loadData() {
+      try {
+        const d = JSON.parse(localStorage.getItem('personal_journey') || '{}');
+        this.goals = d.goals || [];
+        this.tasks = d.tasks || [];
+        this.pomodoros = d.pomodoros || [];
+        this.contacts = d.contacts || [];
+        this.checkins = d.checkins || [];
+        this.settings = d.settings || {};
+        this.weeklyHighlights = d.weeklyHighlights || [];
+        this.nlpTemplates = d.nlpTemplates || ['每日阅读 #成长', '下午开会讨论 #工作', '运动健身 #生活'];
+        this.nlpHistory = d.nlpHistory || [];
+        this.darkMode = this.settings.darkMode || false;
+        this.aiTone = this.settings.aiTone || 'companion';
+        this.whiteSpaceEnabled = this.settings.whiteSpaceEnabled !== false;
+        this.whiteSpaceRatio = this.settings.whiteSpaceRatio || 20;
+        this.applyDarkMode();
+      } catch(e) {
+        this.seedDemoData();
+      }
+    },
+
+    saveData() {
+      this.settings.darkMode = this.darkMode;
+      this.settings.aiTone = this.aiTone;
+      this.settings.whiteSpaceEnabled = this.whiteSpaceEnabled;
+      this.settings.whiteSpaceRatio = this.whiteSpaceRatio;
+      localStorage.setItem('personal_journey', JSON.stringify({
+        goals: this.goals,
+        tasks: this.tasks,
+        pomodoros: this.pomodoros,
+        contacts: this.contacts,
+        checkins: this.checkins,
+        settings: this.settings,
+        weeklyHighlights: this.weeklyHighlights,
+        nlpTemplates: this.nlpTemplates,
+        nlpHistory: this.nlpHistory,
+      }));
+    },
+
+    // ===== 深色模式 =====
+    checkDarkMode() {
+      if (this.settings.darkMode === undefined && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        this.darkMode = true;
+      }
+      this.applyDarkMode();
+    },
+    toggleDarkMode() {
+      this.applyDarkMode();
+      this.saveData();
+    },
+    applyDarkMode() {
+      document.documentElement.classList.toggle('dark-mode', this.darkMode);
+      document.documentElement.classList.toggle('light-mode', !this.darkMode);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.content = this.darkMode ? '#1E1E2E' : '#F8F6F3';
+    },
+
+    // ===== AI建议 =====
+    generateAiTip() {
+      const now = new Date();
+      const hour = now.getHours();
+      let tip;
+      if (hour < 10) {
+        tip = { title: '早安，新的一天', desc: '早晨精力充沛，适合安排今天的核心任务。' };
+      } else if (hour < 14) {
+        const done = this.todayCompletedCount();
+        const total = this.todayTasks().length;
+        if (total > 0 && done === 0) {
+          tip = { title: '该开始了', desc: '上午效率最高，先挑一项重要任务开始吧。' };
+        } else if (done > 0 && done < total) {
+          tip = { title: '节奏不错', desc: '已完成 ' + done + ' 项，继续保持。下午可以安排弹性任务。' };
+        } else {
+          tip = { title: '上午适合专注', desc: '你的精力曲线显示9-11点为峰值，建议优先处理核心任务。' };
+        }
+      } else if (hour < 18) {
+        tip = { title: '午后提醒', desc: '下午精力可能下降，适合处理沟通和弹性任务。' };
+      } else {
+        const todayChecked = this.todayCheckedIn();
+        tip = todayChecked
+          ? { title: '今天辛苦了', desc: '已经打卡完成，剩下的时间留给自己吧。' }
+          : { title: '别忘了打卡', desc: '睡前回顾一下今天，完成打卡记录。' };
+      }
+      this.aiTip = tip;
+    },
+
+    // ===== 精力状态 =====
+    energyColor() {
+      const done = this.todayCompletedCount();
+      const total = this.todayTasks().length;
+      if (total === 0) return 'var(--text-weak)';
+      const ratio = done / total;
+      if (ratio >= 0.7) return 'var(--accent)';
+      if (ratio >= 0.3) return 'var(--task-color)';
+      return 'var(--timeline-color)';
+    },
+    energyLabel() {
+      const done = this.todayCompletedCount();
+      const total = this.todayTasks().length;
+      if (total === 0) return '今天还没有任务';
+      const ratio = done / total;
+      if (ratio >= 0.7) return '精力良好，节奏不错';
+      if (ratio >= 0.3) return '进行中，保持节奏';
+      return '刚起步，慢慢来';
+    },
+
+    // ===== 时间轴引擎 =====
+    timelineBlocks() {
+      const today = this.getTodayStr();
+      const tasks = this.tasks
+        .filter(t => t.date === today)
+        .sort((a, b) => (a.time || '99:99').localeCompare(b.time || '99:99'));
+
+      if (tasks.length === 0) return [];
+
+      const blocks = [];
+      const moduleColors = {
+        work: 'var(--task-color)',
+        life: 'var(--contact-color)',
+        grow: 'var(--goal-color)',
+        important: 'var(--pomodoro-color)',
+      };
+
+      // 预设生活锚点
+      const anchors = [
+        { timeLabel: '07:00', timeRange: '07:00-08:00', title: '晨间 routine' },
+        { timeLabel: '12:00', timeRange: '12:00-13:00', title: '午餐 & 休息' },
+        { timeLabel: '18:00', timeRange: '18:00-19:00', title: '晚餐 & 放松' },
+      ];
+
+      // 插入锚点
+      let anchorIdx = 0;
+      for (let i = 0; i < tasks.length; i++) {
+        const t = tasks[i];
+        const taskTime = t.time || '99:99';
+
+        // 在任务前插入合适的生活锚点
+        while (anchorIdx < anchors.length && anchors[anchorIdx].timeLabel <= taskTime.slice(0, 5)) {
+          blocks.push({
+            id: 'anchor-' + anchorIdx,
+            type: 'anchor',
+            timeLabel: anchors[anchorIdx].timeLabel,
+            title: anchors[anchorIdx].title,
+            timeRange: anchors[anchorIdx].timeRange,
+          });
+          anchorIdx++;
+        }
+
+        // 插入任务
+        const taskType = t.type === '弹性' ? 'flexible' : 'fixed';
+        blocks.push({
+          id: t.id,
+          type: taskType,
+          timeLabel: t.time || '全天',
+          title: t.title,
+          duration: t.duration,
+          tags: t.tags,
+          completed: t.completed,
+          locked: t.locked,
+          recurring: t.recurring,
+          color: moduleColors[t.tags[0]] || 'var(--accent)',
+        });
+
+        // 任务之间插入缓冲间隙
+        if (i < tasks.length - 1) {
+          const nextTime = tasks[i + 1].time || '99:99';
+          if (taskTime !== nextTime) {
+            const gapHeight = this.whiteSpaceEnabled ? Math.max(16, this.whiteSpaceRatio / 2) : 12;
+            blocks.push({
+              id: 'gap-' + i,
+              type: 'gap',
+              height: gapHeight,
+              label: this.whiteSpaceEnabled ? '弹性缓冲 · ' + this.whiteSpaceRatio + '%留白' : '',
+            });
+          }
+        }
+      }
+
+      // 插入剩余锚点
+      while (anchorIdx < anchors.length) {
+        blocks.push({
+          id: 'anchor-' + anchorIdx,
+          type: 'anchor',
+          timeLabel: anchors[anchorIdx].timeLabel,
+          title: anchors[anchorIdx].title,
+          timeRange: anchors[anchorIdx].timeRange,
+        });
+        anchorIdx++;
+      }
+
+      return blocks;
+    },
+
+    toggleTaskById(taskId) {
+      const t = this.tasks.find(t => t.id === taskId);
+      if (t) { t.completed = !t.completed; t.completedAt = t.completed ? new Date().toISOString() : null; this.saveData(); }
+    },
+    toggleTaskType(block) {
+      const t = this.tasks.find(t => t.id === block.id);
+      if (t) { t.type = t.type === '固定' ? '弹性' : '固定'; this.saveData(); }
+    },
+    dragTask(block, e) {
+      this._dragData = block;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', block.id);
+    },
+    dropTask(target, e) {
+      if (!this._dragData || this._dragData.id === target.id) return;
+      const src = this.tasks.find(t => t.id === this._dragData.id);
+      const dst = this.tasks.find(t => t.id === target.id);
+      if (!src || !dst) return;
+      // 交换时间
+      const tmpTime = src.time;
+      src.time = dst.time;
+      dst.time = tmpTime;
+      this._dragData = null;
+      this.saveData();
+    },
+
+    // ===== 目标管理 =====
+    goalsByType(type) {
+      return this.goals.filter(g => g.type === type && !g.parentId);
+    },
+    getSubGoals(parentId) {
+      return this.goals.filter(g => g.parentId === parentId);
+    },
+    typeColor(type) {
+      return { '年': 'var(--goal-color)', '季': 'var(--pomodoro-color)', '月': 'var(--task-color)', '周': 'var(--timeline-color)', '日': 'var(--accent)' }[type] || 'var(--accent)';
+    },
+    openGoalModal(goal = null) {
+      this.editingGoal = goal;
+      if (goal) {
+        this.goalForm = {
+          type: goal.type,
+          title: goal.title,
+          krText: goal.kr.join('\n'),
+          parentId: goal.parentId || '',
+          antiGoalsText: (goal.antiGoals || []).join('\n'),
+        };
+      } else {
+        this.goalForm = { type: '年', title: '', krText: '', parentId: '', antiGoalsText: '' };
+      }
+      this.showGoalModal = true;
+    },
+    editGoal(goal) { this.openGoalModal(goal); },
+    saveGoal() {
+      const data = {
+        id: this.editingGoal ? this.editingGoal.id : Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        type: this.goalForm.type,
+        title: this.goalForm.title.trim(),
+        kr: this.goalForm.krText.split('\n').filter(Boolean),
+        parentId: this.goalForm.parentId || null,
+        antiGoals: this.goalForm.antiGoalsText.split('\n').filter(Boolean),
+        ifThen: [],
+        createdAt: new Date().toISOString(),
+      };
+      if (!data.title) return;
+      if (this.editingGoal) {
+        const idx = this.goals.findIndex(g => g.id === this.editingGoal.id);
+        if (idx >= 0) this.goals[idx] = { ...this.goals[idx], ...data };
+      } else {
+        this.goals.push(data);
+      }
+      this.showGoalModal = false;
+      this.editingGoal = null;
+      this.saveData();
+    },
+    deleteGoal(goal) {
+      if (!confirm('确定删除"' + goal.title + '"及其所有子目标吗？')) return;
+      const collect = (id) => {
+        const ids = [id];
+        this.goals.filter(g => g.parentId === id).forEach(g => ids.push(...collect(g.id)));
+        return ids;
+      };
+      const ids = collect(goal.id);
+      this.goals = this.goals.filter(g => !ids.includes(g.id));
+      this.showGoalModal = false;
+      this.editingGoal = null;
+      this.saveData();
+    },
+
+    // ===== 任务管理 =====
+    todayTasks() {
+      const today = new Date().toISOString().slice(0, 10);
+      return this.tasks.filter(t => t.date === today).sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+    },
+    toggleTask(task) {
+      task.completed = !task.completed;
+      task.completedAt = task.completed ? new Date().toISOString() : null;
+      this.saveData();
+    },
+    toggleLock(task) {
+      task.locked = !task.locked;
+      this.saveData();
+    },
+    tagLabel(tag) {
+      return { work: '工作', life: '生活', grow: '成长', important: '重要' }[tag] || tag;
+    },
+    quickAddTask() {
+      if (!this.quickTaskForm.title.trim()) return;
+      const today = new Date().toISOString().slice(0, 10);
+      this.tasks.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        title: this.quickTaskForm.title.trim(),
+        time: '今天',
+        duration: 30,
+        tags: [this.quickTaskForm.tag],
+        priority: 'normal',
+        type: '固定',
+        locked: false,
+        recurring: false,
+        completed: false,
+        date: today,
+        createdAt: new Date().toISOString(),
+      });
+      this.quickTaskForm = { title: '', tag: 'work' };
+      this.openQuickAdd = false;
+      this.saveData();
+    },
+
+    // ===== NLP 智能输入引擎 =====
+    _nlpTimer: null,
+    nlpDebounce() {
+      clearTimeout(this._nlpTimer);
+      this._nlpTimer = setTimeout(() => this.parseNLP(), 300);
+    },
+    parseNLP() {
+      const raw = this.nlpInput.trim();
+      if (!raw) {
+        this.nlpResult = { title: '', time: '', timeLabel: '', duration: 30, durationSource: '', priority: 'normal', priorityLabel: '普通', tags: [], type: '固定', recurring: false, locked: false, suggestedGoal: '', suggestedGoalTitle: '', warning: '' };
+        this.nlpSuggestions = [];
+        this.nlpMemoryHints = [];
+        return;
+      }
+
+      let remaining = raw;
+      const result = {
+        title: '',
+        time: '',
+        timeLabel: '今天',
+        duration: 30,
+        durationSource: '',
+        priority: 'normal',
+        priorityLabel: '普通',
+        tags: [],
+        type: '固定',
+        recurring: false,
+        locked: false,
+        suggestedGoal: '',
+        suggestedGoalTitle: '',
+        warning: '',
+      };
+
+      // 1. 提取标签 #tag
+      const tagMap = { '工作': 'work', '生活': 'life', '成长': 'grow' };
+      const tagRegex = /#(工作|生活|成长|work|life|grow)/g;
+      let m;
+      while ((m = tagRegex.exec(raw)) !== null) {
+        const tag = tagMap[m[1]] || m[1];
+        if (!result.tags.includes(tag)) result.tags.push(tag);
+        remaining = remaining.replace(m[0], '');
+      }
+      if (result.tags.length === 0) result.tags.push('work');
+
+      // 2. 提取优先级关键词
+      const hiPrio = /重要|紧急|高优|优先|关键/g;
+      const loPrio = /不急|低优|有空|随便/g;
+      if (hiPrio.test(remaining)) {
+        result.priority = 'high';
+        result.priorityLabel = '高';
+        remaining = remaining.replace(hiPrio, '');
+      }
+      if (loPrio.test(remaining)) {
+        result.priority = 'low';
+        result.priorityLabel = '低';
+        remaining = remaining.replace(loPrio, '');
+      }
+
+      // 3. 提取时间信息
+      const now = new Date();
+      const today = now.toISOString().slice(0, 10);
+
+      const timePatterns = [
+        { regex: /明天\s*(早上|上午|中午|下午|晚上)?\s*(\d{1,2})[:：点](\d{0,2})?/g, handler: (m) => {
+          const d = new Date(now); d.setDate(d.getDate() + 1);
+          const h = parseInt(m[2]); const min = m[3] ? parseInt(m[3]) : 0;
+          const am = m[1] && (m[1].includes('下午') || m[1].includes('晚上'));
+          const hour = am && h < 12 ? h + 12 : h;
+          result.time = d.toISOString().slice(0, 10) + 'T' + String(hour).padStart(2,'0') + ':' + String(min).padStart(2,'0');
+          result.timeLabel = '明天 ' + String(hour).padStart(2,'0') + ':' + String(min).padStart(2,'0');
+          return m[0];
+        }},
+        { regex: /后天/g, handler: () => {
+          const d = new Date(now); d.setDate(d.getDate() + 2);
+          result.time = d.toISOString().slice(0, 10) + 'T09:00';
+          result.timeLabel = '后天 09:00';
+          return '后天';
+        }},
+        { regex: /周([一二三四五六日天])\s*(\d{1,2})[:：点](\d{0,2})?/g, handler: (m) => {
+          const dayMap = { '一':1,'二':2,'三':3,'四':4,'五':5,'六':6,'日':0,'天':0 };
+          const target = dayMap[m[1]];
+          const d = new Date(now);
+          const current = d.getDay();
+          let diff = target - current;
+          if (diff <= 0) diff += 7;
+          d.setDate(d.getDate() + diff);
+          const h = parseInt(m[2]); const min = m[3] ? parseInt(m[3]) : 0;
+          result.time = d.toISOString().slice(0, 10) + 'T' + String(h).padStart(2,'0') + ':' + String(min).padStart(2,'0');
+          result.timeLabel = '周' + m[1] + ' ' + String(h).padStart(2,'0') + ':' + String(min).padStart(2,'0');
+          return m[0];
+        }},
+        { regex: /(今天|今晚)?\s*(早上|上午|中午|下午|晚上|傍晚)?\s*(\d{1,2})[:：点](\d{0,2})?/g, handler: (m) => {
+          let h = parseInt(m[3]); const min = m[4] ? parseInt(m[4]) : 0;
+          const period = m[2] || '';
+          if (period.includes('下午') || period.includes('晚上') || period.includes('傍晚')) {
+            if (h < 12) h += 12;
+          }
+          result.time = today + 'T' + String(h).padStart(2,'0') + ':' + String(min).padStart(2,'0');
+          result.timeLabel = '今天 ' + String(h).padStart(2,'0') + ':' + String(min).padStart(2,'0');
+          return m[0];
+        }},
+        { regex: /(早上|上午|中午|下午|晚上|傍晚)/g, handler: (m) => {
+          const periods = { '早上':'08:00', '上午':'09:00', '中午':'12:00', '下午':'14:00', '晚上':'19:00', '傍晚':'17:00' };
+          result.time = today + 'T' + periods[m[1]];
+          result.timeLabel = '今天 ' + periods[m[1]];
+          return m[0];
+        }},
+      ];
+
+      for (const p of timePatterns) {
+        const match = p.regex.exec(remaining);
+        if (match) {
+          remaining = remaining.replace(p.handler(match), '');
+          p.regex.lastIndex = 0;
+          break;
+        }
+        p.regex.lastIndex = 0;
+      }
+
+      // 4. 提取时长
+      const durPatterns = [
+        { regex: /(\d+)\s*(小时|个?钟头|h|hrs?)/gi, handler: (m) => { result.duration = parseInt(m[1]) * 60; result.durationSource = '从文本提取'; return m[0]; }},
+        { regex: /(\d+)\s*(分钟|分|min|mins?)/gi, handler: (m) => { result.duration = parseInt(m[1]); result.durationSource = '从文本提取'; return m[0]; }},
+      ];
+      for (const p of durPatterns) {
+        const match = p.regex.exec(remaining);
+        if (match) { remaining = remaining.replace(p.handler(match), ''); break; }
+        p.regex.lastIndex = 0;
+      }
+
+      // 5. 剩余文本作为标题
+      result.title = remaining.replace(/[#@]/g, '').replace(/\s+/g, ' ').trim();
+
+      // 6. 智能补充时长（基于历史）
+      if (!result.durationSource && result.title) {
+        const hist = this.nlpHistory.filter(h => h.title && result.title && h.title.includes(result.title.slice(0, 2)));
+        if (hist.length > 0) {
+          result.duration = hist[hist.length - 1].duration;
+          result.durationSource = '根据历史习惯';
+        }
+      }
+
+      // 7. 关联目标建议
+      if (result.title && result.title.length >= 2) {
+        this.nlpSuggestions = this.goals.filter(g => {
+          const kw = result.title.slice(0, 3);
+          return g.title.includes(kw) || g.kr.some(k => k.includes(kw));
+        }).slice(0, 3);
+        if (this.nlpSuggestions.length > 0 && !result.suggestedGoal) {
+          result.suggestedGoal = this.nlpSuggestions[0].id;
+          result.suggestedGoalTitle = this.nlpSuggestions[0].title;
+        }
+      } else {
+        this.nlpSuggestions = [];
+      }
+
+      // 8. 冲突检测
+      if (result.time) {
+        const conflict = this.tasks.find(t => t.date === result.time.slice(0, 10) && t.time === result.timeLabel);
+        if (conflict) {
+          result.warning = '该时段已有任务：「' + conflict.title + '」，建议调整时间或设为弹性任务。';
+          result.type = '弹性';
+        }
+      }
+
+      // 9. 肌肉记忆提示
+      this.nlpMemoryHints = [];
+      if (this.nlpHistory.length >= 3) {
+        const recentTags = this.nlpHistory.slice(-5).map(h => h.tags[0]).filter(Boolean);
+        const topTag = recentTags.sort((a,b) => recentTags.filter(v => v===a).length - recentTags.filter(v => v===b).length).pop();
+        if (topTag && !result.tags.includes(topTag)) {
+          this.nlpMemoryHints.push('你最近常用「' + this.tagLabel(topTag) + '」标签');
+        }
+        const avgDur = Math.round(this.nlpHistory.slice(-10).reduce((s, h) => s + h.duration, 0) / Math.min(this.nlpHistory.length, 10));
+        if (Math.abs(result.duration - avgDur) > 20) {
+          this.nlpMemoryHints.push('你通常的任务时长约' + avgDur + '分钟');
+        }
+      }
+
+      this.nlpResult = result;
+    },
+
+    confirmNLP() {
+      if (!this.nlpResult.title) return;
+      const r = this.nlpResult;
+      const today = new Date().toISOString().slice(0, 10);
+      const date = r.time ? r.time.slice(0, 10) : today;
+
+      const task = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        title: r.title,
+        time: r.timeLabel || '今天',
+        duration: r.duration,
+        tags: r.tags,
+        priority: r.priority,
+        type: r.type,
+        locked: r.locked,
+        recurring: r.recurring,
+        completed: false,
+        date: date,
+        goalId: r.suggestedGoal || '',
+        createdAt: new Date().toISOString(),
+      };
+
+      this.tasks.push(task);
+
+      // 记录到历史（肌肉记忆）
+      this.nlpHistory.push({
+        title: r.title,
+        tags: r.tags,
+        duration: r.duration,
+        priority: r.priority,
+        time: r.timeLabel,
+        at: new Date().toISOString(),
+      });
+      if (this.nlpHistory.length > 50) this.nlpHistory = this.nlpHistory.slice(-50);
+
+      // 重置
+      this.nlpInput = '';
+      this.nlpResult = { title: '', time: '', timeLabel: '', duration: 30, durationSource: '', priority: 'normal', priorityLabel: '普通', tags: [], type: '固定', recurring: false, locked: false, suggestedGoal: '', suggestedGoalTitle: '', warning: '' };
+      this.nlpSuggestions = [];
+      this.nlpMemoryHints = [];
+      this.saveData();
+
+      // 跳回首页查看
+      this.page = 'home';
+    },
+
+    applyTemplate(tpl) {
+      this.nlpInput = tpl;
+      this.parseNLP();
+    },
+
+    saveAsTemplate() {
+      if (this.nlpInput && !this.nlpTemplates.includes(this.nlpInput)) {
+        this.nlpTemplates.push(this.nlpInput);
+        if (this.nlpTemplates.length > 10) this.nlpTemplates = this.nlpTemplates.slice(-10);
+        this.saveData();
+      }
+    },
+
+    // ===== 打卡引擎 =====
+    currentWeekLabel() {
+      const d = new Date();
+      const start = new Date(d); start.setDate(d.getDate() - d.getDay() + 1);
+      const end = new Date(start); end.setDate(start.getDate() + 6);
+      return start.getMonth() + 1 + '/' + start.getDate() + ' - ' + (end.getMonth() + 1) + '/' + end.getDate();
+    },
+    todayCheckinDate() {
+      const d = new Date();
+      return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+    },
+    getTodayStr() {
+      return new Date().toISOString().slice(0, 10);
+    },
+    todayCheckedIn() {
+      return this.checkins.some(c => c.date === this.getTodayStr());
+    },
+    todayCheckinGrade() {
+      const c = this.checkins.find(c => c.date === this.getTodayStr());
+      return c ? c.grade : '';
+    },
+    todayCheckinNote() {
+      const c = this.checkins.find(c => c.date === this.getTodayStr());
+      return c ? c.note : '';
+    },
+    todayCheckinGradeColor() {
+      const g = this.todayCheckinGrade();
+      return g === 'A' ? 'var(--accent)' : g === 'B' ? 'var(--task-color)' : 'var(--timeline-color)';
+    },
+    todayCompletedCount() {
+      const today = this.getTodayStr();
+      return this.tasks.filter(t => t.date === today && t.completed).length;
+    },
+    autoCheckinGrade() {
+      const total = this.todayTasks().length;
+      if (total === 0) return;
+      const done = this.todayCompletedCount();
+      const ratio = done / total;
+      if (ratio >= 0.9) this.tempCheckinGrade = 'A';
+      else if (ratio >= 0.5) this.tempCheckinGrade = 'B';
+      else this.tempCheckinGrade = 'C';
+    },
+    submitCheckin() {
+      const today = this.getTodayStr();
+      const done = this.todayCompletedCount();
+      const total = this.todayTasks().length;
+      const existing = this.checkins.findIndex(c => c.date === today);
+
+      const record = {
+        id: 'ch' + today,
+        date: today,
+        grade: this.tempCheckinGrade,
+        note: this.tempCheckinNote.trim(),
+        completedTasks: done,
+        totalTasks: total,
+        createdAt: new Date().toISOString(),
+      };
+
+      if (existing >= 0) {
+        this.checkins[existing] = { ...this.checkins[existing], ...record };
+      } else {
+        this.checkins.push(record);
+      }
+
+      this.todayCheckinEdit = false;
+      this.saveData();
+    },
+    currentStreak() {
+      if (this.checkins.length === 0) return 0;
+      const sorted = [...this.checkins].sort((a, b) => b.date.localeCompare(a.date));
+      const today = this.getTodayStr();
+      let expected = today;
+      let streak = 0;
+      for (const c of sorted) {
+        if (c.date === expected) {
+          streak++;
+          const d = new Date(expected);
+          d.setDate(d.getDate() - 1);
+          expected = d.toISOString().slice(0, 10);
+        } else if (c.date < expected) {
+          break;
+        }
+      }
+      return streak;
+    },
+    weekStats() {
+      const d = new Date();
+      const start = new Date(d); start.setDate(d.getDate() - d.getDay() + 1);
+      const counts = { A: 0, B: 0, C: 0, total: 0 };
+      for (let i = 0; i < 7; i++) {
+        const ds = start.toISOString().slice(0, 10);
+        const c = this.checkins.find(c => c.date === ds);
+        if (c) { counts[c.grade]++; counts.total++; }
+        start.setDate(start.getDate() + 1);
+      }
+      const t = counts.total || 1;
+      return { ...counts, pctA: counts.A / t, pctB: counts.B / t, pctC: counts.C / t };
+    },
+    currentMonthLabel() {
+      const d = new Date();
+      d.setMonth(d.getMonth() + this.heatmapOffset);
+      return d.getFullYear() + '年' + (d.getMonth() + 1) + '月';
+    },
+    heatmapDays() {
+      const d = new Date();
+      d.setMonth(d.getMonth() + this.heatmapOffset);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const today = this.getTodayStr();
+
+      const days = [];
+      const startDow = firstDay.getDay();
+      const offset = startDow === 0 ? 6 : startDow - 1;
+
+      for (let i = 0; i < offset; i++) {
+        days.push({ dayNum: '', date: '', grade: '', inMonth: false, isToday: false, label: '' });
+      }
+
+      for (let i = 1; i <= lastDay.getDate(); i++) {
+        const ds = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(i).padStart(2, '0');
+        const c = this.checkins.find(c => c.date === ds);
+        days.push({
+          dayNum: i,
+          date: ds,
+          grade: c ? c.grade : '',
+          inMonth: true,
+          isToday: ds === today,
+          label: ds + (c ? ' ' + c.grade + '档' : ''),
+        });
+      }
+      return days;
+    },
+    openDayDetail(date) {
+      const c = this.checkins.find(c => c.date === date);
+      if (c) {
+        alert(date + '\n' + c.grade + '档打卡\n' + (c.note || '无备注') + '\n任务完成: ' + c.completedTasks + '/' + c.totalTasks);
+      }
+    },
+
+    // ===== 目标-打卡联动 =====
+    goalProgress(goalId) {
+      const today = this.getTodayStr();
+      const d = new Date();
+      const start = new Date(d); start.setDate(d.getDate() - d.getDay() + 1);
+      const weekStart = start.toISOString().slice(0, 10);
+      const tasks = this.tasks.filter(t => t.goalId === goalId && t.date >= weekStart && t.date <= today);
+      if (tasks.length === 0) return 0;
+      const done = tasks.filter(t => t.completed).length;
+      return Math.round(done / tasks.length * 100);
+    },
+    weeklyABC(goalId) {
+      const d = new Date();
+      const start = new Date(d); start.setDate(d.getDate() - d.getDay() + 1);
+      const counts = { A: 0, B: 0, C: 0 };
+      for (let i = 0; i < 7; i++) {
+        const ds = start.toISOString().slice(0, 10);
+        const c = this.checkins.find(c => c.date === ds);
+        if (c) {
+          const hasTaskForGoal = this.tasks.some(t => t.goalId === goalId && t.date === ds);
+          if (hasTaskForGoal) counts[c.grade]++;
+        }
+        start.setDate(start.getDate() + 1);
+      }
+      return counts;
+    },
+
+    // ===== 番茄钟 =====
+    setPomodoroMode(mode) {
+      this.pomodoroMode = mode;
+      this.pomodoroRunning = false;
+      clearInterval(this.pomodoroTimer);
+      const durations = { standard: 25 * 60, sprint: 10 * 60, deep: 50 * 60 };
+      this.pomodoroRemaining = durations[mode];
+      this.pomodoroTotal = durations[mode];
+    },
+    togglePomodoro() {
+      if (this.pomodoroRunning) {
+        clearInterval(this.pomodoroTimer);
+        this.pomodoroRunning = false;
+      } else {
+        this.pomodoroRunning = true;
+        this.pomodoroTimer = setInterval(() => {
+          if (this.pomodoroRemaining > 0) {
+            this.pomodoroRemaining--;
+          } else {
+            clearInterval(this.pomodoroTimer);
+            this.pomodoroRunning = false;
+            this.completePomodoro();
+          }
+        }, 1000);
+      }
+    },
+    stopPomodoro() {
+      clearInterval(this.pomodoroTimer);
+      this.pomodoroRunning = false;
+      const completed = this.pomodoroTotal - this.pomodoroRemaining;
+      if (completed > 60) {
+        this.pomodoros.push({
+          id: Date.now().toString(36),
+          mode: this.pomodoroMode,
+          duration: this.pomodoroTotal,
+          completed: completed,
+          date: new Date().toISOString().slice(0, 10),
+          startedAt: new Date(Date.now() - completed * 1000).toISOString(),
+          endedAt: new Date().toISOString(),
+        });
+      }
+      this.pomodoroRemaining = this.pomodoroTotal;
+      this.saveData();
+    },
+    completePomodoro() {
+      this.pomodoros.push({
+        id: Date.now().toString(36),
+        mode: this.pomodoroMode,
+        duration: this.pomodoroTotal,
+        completed: this.pomodoroTotal,
+        date: new Date().toISOString().slice(0, 10),
+        startedAt: new Date(Date.now() - this.pomodoroTotal * 1000).toISOString(),
+        endedAt: new Date().toISOString(),
+      });
+      this.pomodoroRemaining = this.pomodoroTotal;
+      this.saveData();
+    },
+    todayPomodoros() {
+      const today = new Date().toISOString().slice(0, 10);
+      return this.pomodoros.filter(p => p.date === today).length;
+    },
+    formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return m + ':' + String(s).padStart(2, '0');
+    },
+
+    // ===== 人脉管理 =====
+    filteredContacts() {
+      if (!this.contactFilter) return this.contacts;
+      const lvl = parseInt(this.contactFilter.replace('L', ''));
+      return this.contacts.filter(c => c.level === lvl);
+    },
+    levelLabel(l) {
+      return { L1: '核心圈', L2: '重要圈', L3: '常联', L4: '泛联', L5: '存档' }[l] || '';
+    },
+    openContactModal(contact = null) {
+      const name = prompt('姓名：', contact ? contact.name : '');
+      if (!name) return;
+      const level = parseInt(prompt('层级 (1-5)：', contact ? contact.level : '3'));
+      if (!level || level < 1 || level > 5) return;
+      const notes = prompt('备注：', contact ? contact.notes || '' : '') || '';
+      const data = {
+        id: contact ? contact.id : Date.now().toString(36),
+        name, level, notes,
+        preferences: [],
+        taboos: [],
+        lastContact: contact ? contact.lastContact : '今天',
+        birthday: contact ? contact.birthday : '',
+        createdAt: contact ? contact.createdAt : new Date().toISOString(),
+      };
+      if (contact) {
+        const idx = this.contacts.findIndex(c => c.id === contact.id);
+        if (idx >= 0) this.contacts[idx] = { ...this.contacts[idx], ...data };
+      } else {
+        this.contacts.push(data);
+      }
+      this.saveData();
+    },
+    editContact(contact) { this.openContactModal(contact); },
+
+    // ===== AI 洞察引擎 =====
+    insightDays() {
+      if (this.checkins.length === 0) return 0;
+      const sorted = [...this.checkins].map(c => c.date).sort();
+      const first = new Date(sorted[0]);
+      const last = new Date(sorted[sorted.length - 1]);
+      return Math.ceil((last - first) / (1000 * 60 * 60 * 24)) + 1;
+    },
+    insightEnergyLabel() {
+      const data = this.weekEnergyData();
+      const avg = data.reduce((s, d) => s + d.pct, 0) / data.length;
+      if (avg >= 0.7) return '精力充沛';
+      if (avg >= 0.4) return '状态平稳';
+      return '需要休息';
+    },
+    insightEnergyDesc() {
+      const label = this.insightEnergyLabel();
+      const tone = this.aiTone;
+      if (tone === 'companion') {
+        return label === '精力充沛' ? '最近状态很好，继续保持节奏。' :
+               label === '状态平稳' ? '一切都在轨道上，不急不躁。' :
+               '最近辛苦了，记得给自己留些空白。';
+      }
+      if (tone === 'efficiency') {
+        return label === '精力充沛' ? '高能期，建议集中处理核心任务。' :
+               label === '状态平稳' ? '效率正常，适合处理沟通和弹性任务。' :
+               '低能期，减少新任务，启动兜底模式。';
+      }
+      // concise
+      return label === '精力充沛' ? '高能' : label === '状态平稳' ? '正常' : '低能';
+    },
+
+    weekEnergyData() {
+      const d = new Date();
+      const start = new Date(d); start.setDate(d.getDate() - d.getDay() + 1);
+      const days = [];
+      const labels = ['一','二','三','四','五','六','日'];
+      for (let i = 0; i < 7; i++) {
+        const ds = start.toISOString().slice(0, 10);
+        const tasks = this.tasks.filter(t => t.date === ds);
+        const total = tasks.length;
+        const done = tasks.filter(t => t.completed).length;
+        const pct = total > 0 ? done / total : 0;
+        days.push({ label: labels[i], pct, date: ds });
+        start.setDate(start.getDate() + 1);
+      }
+      return days;
+    },
+
+    timeDistribution() {
+      const d = new Date();
+      const start = new Date(d); start.setDate(d.getDate() - d.getDay() + 1);
+      const tags = { work: 0, life: 0, grow: 0 };
+      for (let i = 0; i < 7; i++) {
+        const ds = start.toISOString().slice(0, 10);
+        this.tasks.filter(t => t.date === ds && t.completed).forEach(t => {
+          if (t.tags[0] === 'work') tags.work += t.duration;
+          else if (t.tags[0] === 'life') tags.life += t.duration;
+          else tags.grow += t.duration;
+        });
+        start.setDate(start.getDate() + 1);
+      }
+      const total = (tags.work + tags.life + tags.grow) || 1;
+      return [
+        { label: '工作', hours: Math.round(tags.work / 60), pct: tags.work / total, color: 'var(--task-color)' },
+        { label: '生活', hours: Math.round(tags.life / 60), pct: tags.life / total, color: 'var(--contact-color)' },
+        { label: '成长', hours: Math.round(tags.grow / 60), pct: tags.grow / total, color: 'var(--goal-color)' },
+      ];
+    },
+    timeDistAdvice() {
+      const dist = this.timeDistribution();
+      const work = dist[0].pct;
+      const grow = dist[2].pct;
+      if (work > 0.6) return '工作占比偏高，建议本周留出「成长」和「生活」时间。';
+      if (grow < 0.1) return '成长投入较少，每天15分钟也能积少成多。';
+      return '时间分布比较均衡，保持就好。';
+    },
+
+    weekPomodoroCount() {
+      const d = new Date();
+      const start = new Date(d); start.setDate(d.getDate() - d.getDay() + 1);
+      const weekStart = start.toISOString().slice(0, 10);
+      return this.pomodoros.filter(p => p.date >= weekStart).length;
+    },
+    weekFocusHours() {
+      const d = new Date();
+      const start = new Date(d); start.setDate(d.getDate() - d.getDay() + 1);
+      const weekStart = start.toISOString().slice(0, 10);
+      const total = this.pomodoros.filter(p => p.date >= weekStart).reduce((s, p) => s + (p.completed || 0), 0);
+      return Math.round(total / 3600 * 10) / 10;
+    },
+    weekAvgFocus() {
+      const d = new Date();
+      const start = new Date(d); start.setDate(d.getDate() - d.getDay() + 1);
+      const weekStart = start.toISOString().slice(0, 10);
+      const arr = this.pomodoros.filter(p => p.date >= weekStart);
+      if (arr.length === 0) return 0;
+      const total = arr.reduce((s, p) => s + (p.completed || 0), 0);
+      return Math.round(total / arr.length / 60);
+    },
+
+    aiInsights() {
+      const insights = [];
+      const tone = this.aiTone;
+      const energy = this.weekEnergyData();
+      const avgEnergy = energy.reduce((s, d) => s + d.pct, 0) / energy.length;
+      const dist = this.timeDistribution();
+
+      // 疲劳感知 L3
+      if (avgEnergy < 0.3 && energy.filter(d => d.pct < 0.3).length >= 3) {
+        const text = tone === 'companion'
+          ? '最近连续几天状态不太好，要不要启动兜底模式，给自己放个假？'
+          : tone === 'efficiency'
+          ? '检测到连续低能期（3天以上），建议暂停新任务分配，仅保留已锁定事项。'
+          : '连续低能 → 建议兜底模式';
+        insights.push({ level: 'L3', category: '疲劳感知', text, action: 'whitespace', actionLabel: '开启留白保护' });
+      }
+
+      // 时间平衡 L2
+      if (dist[0].pct > 0.6) {
+        const text = tone === 'companion'
+          ? '你本周工作占比偏高，记得留时间给生活和成长哦。'
+          : tone === 'efficiency'
+          ? '工作时间占比超过60%，建议调整：减少1项工作任务，增加生活/成长时间。'
+          : '工作>60% → 建议减1项工作';
+        insights.push({ level: 'L2', category: '时间平衡', text, action: '', actionLabel: '' });
+      }
+
+      // 社交充电 L2
+      if (this.contacts.length > 0 && this.weekPomodoroCount() > 10) {
+        const lastContact = this.contacts.filter(c => c.lastContact).sort((a, b) => {
+          const num = (s) => { const m = s.match(/(\d+)/); return m ? parseInt(m[1]) : 999; };
+          return num(b.lastContact) - num(a.lastContact);
+        });
+        if (lastContact.length > 0 && lastContact[0].lastContact) {
+          const m = lastContact[0].lastContact.match(/(\d+)/);
+          if (m && parseInt(m[1]) > 7) {
+            const text = tone === 'companion'
+              ? '专注了很久，要不要联系下朋友？' + lastContact[0].name + '上次联系是' + lastContact[0].lastContact + '了。'
+              : tone === 'efficiency'
+              ? '社交维护提醒：' + lastContact[0].name + '超过7天未联系，建议本周安排一次。'
+              : '社交：' + lastContact[0].name + ' >7天未联系';
+            insights.push({ level: 'L2', category: '社交充电', text, action: '', actionLabel: '' });
+          }
+        }
+      }
+
+      // 番茄效率 L1
+      if (this.weekPomodoroCount() > 0 && this.weekAvgFocus() < 20) {
+        const text = tone === 'companion'
+          ? '番茄钟平均时长偏短，是不是被琐事打断了？没关系，试试深度工作模式。'
+          : tone === 'efficiency'
+          ? '平均每次专注<20分钟，建议尝试50分钟深度工作模式提高效率。'
+          : '番茄偏短 → 建议深度模式';
+        insights.push({ level: 'L1', category: '专注质量', text, action: '', actionLabel: '' });
+      }
+
+      // 打卡一致性 L1
+      if (this.currentStreak() >= 5) {
+        const text = tone === 'companion'
+          ? '已经连续' + this.currentStreak() + '天打卡记录了，保持自己的节奏就好。'
+          : tone === 'efficiency'
+          ? '连续' + this.currentStreak() + '天打卡，数据积累有助于下周规划。'
+          : '连续' + this.currentStreak() + '天打卡';
+        insights.push({ level: 'L1', category: '打卡一致性', text, action: '', actionLabel: '' });
+      }
+
+      return insights;
+    },
+
+    doAction(action) {
+      if (action === 'whitespace') {
+        this.whiteSpaceEnabled = true;
+        this.whiteSpaceRatio = Math.min(40, this.whiteSpaceRatio + 10);
+        this.saveData();
+        this.page = 'settings';
+      }
+    },
+
+    // ===== 正反馈体系（数字断舍离）=====
+    getWeekNumber() {
+      const d = new Date();
+      const start = new Date(d.getFullYear(), 0, 1);
+      return Math.ceil(((d - start) / 86400000 + start.getDay() + 1) / 7);
+    },
+    fuzzyFocusLabel() {
+      const hours = this.weekFocusHours();
+      if (hours > 15) return '很多';
+      if (hours > 8) return '较多';
+      if (hours > 3) return '适中';
+      if (hours > 0) return '较少';
+      return '暂无';
+    },
+    fuzzyTaskLabel() {
+      const d = new Date();
+      const start = new Date(d); start.setDate(d.getDate() - d.getDay() + 1);
+      const weekStart = start.toISOString().slice(0, 10);
+      const tasks = this.tasks.filter(t => t.date >= weekStart);
+      const done = tasks.filter(t => t.completed).length;
+      const total = tasks.length;
+      if (total === 0) return '暂无';
+      const ratio = done / total;
+      if (ratio >= 0.8) return '顺利';
+      if (ratio >= 0.5) return '不错';
+      return '还可以';
+    },
+    fuzzyRestLabel() {
+      const weekDays = this.weekDayDetails();
+      const cDays = weekDays.filter(d => d.grade === 'C').length;
+      if (cDays >= 2) return '较多休息';
+      if (cDays === 1) return '有休息';
+      return '紧凑';
+    },
+    weekTrendColor() {
+      return 'var(--accent)';
+    },
+    weekTrendLabel() {
+      const d = new Date();
+      const thisStart = new Date(d); thisStart.setDate(d.getDate() - d.getDay() + 1);
+      const lastStart = new Date(thisStart); lastStart.setDate(lastStart.getDate() - 7);
+      const thisWeek = this.checkins.filter(c => c.date >= thisStart.toISOString().slice(0, 10)).length;
+      const lastWeek = this.checkins.filter(c => c.date >= lastStart.toISOString().slice(0, 10) && c.date < thisStart.toISOString().slice(0, 10)).length;
+      if (thisWeek > lastWeek) return '好一些';
+      if (thisWeek === lastWeek) return '差不多';
+      return '少一点';
+    },
+
+    weekDayDetails() {
+      const d = new Date();
+      const start = new Date(d); start.setDate(d.getDate() - d.getDay() + 1);
+      const today = this.getTodayStr();
+      const dayNames = ['一','二','三','四','五','六','日'];
+      const result = [];
+      for (let i = 0; i < 7; i++) {
+        const ds = start.toISOString().slice(0, 10);
+        const c = this.checkins.find(c => c.date === ds);
+        result.push({ date: ds, dayName: dayNames[i], grade: c ? c.grade : '', isToday: ds === today });
+        start.setDate(start.getDate() + 1);
+      }
+      return result;
+    },
+    weekGradeSummary() {
+      const days = this.weekDayDetails();
+      const a = days.filter(d => d.grade === 'A').length;
+      const b = days.filter(d => d.grade === 'B').length;
+      const c = days.filter(d => d.grade === 'C').length;
+      if (a + b + c === 0) return '本周还没有打卡记录';
+      if (a >= 5) return '这周状态非常好，5天以上完美日！';
+      if (a >= 3) return '节奏稳定，' + a + '天完美日。';
+      if (c >= 2) return '这周有' + c + '天兜底日，没关系，下周调整。';
+      return '整体平稳，保持节奏。';
+    },
+
+    autoHighlights() {
+      const highlights = [];
+      const days = this.weekDayDetails();
+      const aCount = days.filter(d => d.grade === 'A').length;
+      const streak = this.currentStreak();
+
+      if (aCount >= 3) highlights.push('连续' + aCount + '天达到A档完美日');
+      if (streak >= 5) highlights.push('连续' + streak + '天打卡记录');
+      const d = new Date();
+      const start = new Date(d); start.setDate(d.getDate() - d.getDay() + 1);
+      const weekStart = start.toISOString().slice(0, 10);
+      const tasks = this.tasks.filter(t => t.date >= weekStart && t.completed);
+      if (tasks.some(t => t.priority === 'high')) highlights.push('完成了高优先级任务');
+
+      // 番茄相关
+      const poms = this.pomodoros.filter(p => p.date >= weekStart && p.mode === 'deep');
+      if (poms.length >= 2) highlights.push('完成了' + poms.length + '次深度工作番茄');
+
+      // 留白决策
+      if (this.whiteSpaceEnabled && this.whiteSpaceRatio >= 20) {
+        highlights.push('主动开启留白模式，给自己缓冲空间');
+      }
+
+      return highlights;
+    },
+
+    weeklyTips() {
+      const tips = [];
+      const dist = this.timeDistribution();
+      const days = this.weekDayDetails();
+      const aDays = days.filter(d => d.grade === 'A');
+
+      if (dist[0].pct > 0.6) tips.push('工作占比偏高，下周建议增加「成长」和「生活」标签的任务。');
+      if (aDays.length >= 3 && aDays.every(d => parseInt(d.date.slice(8, 10)) <= 5)) {
+        tips.push('A档集中在工作日，周末可以适当放松。');
+      }
+      if (this.weekPomodoroCount() > 10) {
+        tips.push('专注时长充足，继续保持深度工作习惯。');
+      } else if (this.weekPomodoroCount() > 0) {
+        tips.push('下周试试每天至少1个番茄，从小目标开始。');
+      }
+      tips.push('本周上午效率明显高于下午，建议下周继续把核心任务安排在上午。');
+      return tips;
+    },
+
+    milestones() {
+      const ms = [];
+      const streak = this.currentStreak();
+      const totalPoms = this.pomodoros.length;
+      const totalCheckins = this.checkins.length;
+
+      if (streak >= 7) ms.push({ text: '连续7天打卡记录！你建立了一个好习惯。' });
+      if (totalPoms >= 50) ms.push({ text: '累计完成50个番茄！专注力在提升。' });
+      if (totalCheckins >= 30) ms.push({ text: '累计30天打卡，已经坚持一个月了。' });
+      if (this.goals.some(g => g.type === '年' && g.kr.length >= 3)) {
+        ms.push({ text: '已设定完整的年度目标体系。' });
+      }
+      return ms;
+    },
+
+    lockedTasks() {
+      const today = this.getTodayStr();
+      return this.tasks.filter(t => t.locked && t.date === today);
+    },
+
+    // ===== 系统弹性 =====
+    emergencyTemplates: [
+      { id: 'meeting', label: '临时会议' },
+      { id: 'sick', label: '身体不适' },
+      { id: 'urgent', label: '紧急事务' },
+      { id: 'transport', label: '交通故障' },
+      { id: 'mood', label: '情绪波动' },
+      { id: 'other', label: '其他' },
+    ],
+    emergencySelected: null,
+
+    selectEmergency(tpl) {
+      this.emergencySelected = this.emergencySelected === tpl.id ? null : tpl.id;
+    },
+
+    applyEmergencyPlan(plan) {
+      const today = this.getTodayStr();
+      const tasks = this.tasks.filter(t => t.date === today && !t.completed && !t.locked);
+
+      if (plan === 'A') {
+        // 顺延至明日
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const ts = tomorrow.toISOString().slice(0, 10);
+        tasks.forEach(t => { t.date = ts; });
+        alert('已将' + tasks.length + '项未完成任务顺延至明日。');
+      } else if (plan === 'B') {
+        // 压缩：删除低优先级弹性任务
+        const removed = tasks.filter(t => t.priority === 'low' && t.type === '弹性');
+        removed.forEach(t => {
+          const idx = this.tasks.indexOf(t);
+          if (idx >= 0) this.tasks.splice(idx, 1);
+        });
+        // 剩余弹性任务标记为已调整
+        tasks.filter(t => t.type === '弹性').forEach(t => { t.type = '固定'; t.locked = true; });
+        alert('已删减' + removed.length + '项低优先级任务，保留核心事项。');
+      } else if (plan === 'C') {
+        // 兜底：非locked且非固定任务全部移除
+        const removed = tasks.filter(t => t.type !== '固定' || t.priority === 'low');
+        removed.forEach(t => {
+          const idx = this.tasks.indexOf(t);
+          if (idx >= 0) this.tasks.splice(idx, 1);
+        });
+        alert('已启动兜底日（C档），仅保留最基本的事项。');
+      }
+
+      this.emergencySelected = null;
+      this.saveData();
+    },
+
+    // ===== 回顾 =====
+    addHighlight() {
+      const h = prompt('本周的一个亮点：');
+      if (h) {
+        this.weeklyHighlights.push(h);
+        this.saveData();
+      }
+    },
+
+    // ===== 数据管理 =====
+    exportData() {
+      const blob = new Blob([localStorage.getItem('personal_journey') || '{}'], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '个人之旅_备份_' + new Date().toISOString().slice(0, 10) + '.json';
+      a.click();
+    },
+    resetData() {
+      if (!confirm('确定要重置所有数据吗？此操作不可恢复。建议先导出备份。')) return;
+      localStorage.removeItem('personal_journey');
+      this.goals = [];
+      this.tasks = [];
+      this.pomodoros = [];
+      this.contacts = [];
+      this.checkins = [];
+      this.weeklyHighlights = [];
+      this.nlpTemplates = ['每日阅读 #成长', '下午开会讨论 #工作', '运动健身 #生活'];
+      this.nlpHistory = [];
+      this.seedDemoData();
+    },
+    seedDemoData() {
+      const now = new Date().toISOString();
+      const today = now.slice(0, 10);
+      this.goals = [
+        { id: 'g1', type: '年', title: '提升专业能力', kr: ['通过PMP认证', '读完12本专业书籍'], parentId: null, antiGoals: ['不要为了考证牺牲睡眠质量'], ifThen: [], createdAt: now },
+        { id: 'g2', type: '季', title: 'Q2完成培训课程', kr: ['学完35学时', '完成3次模拟考'], parentId: 'g1', antiGoals: [], ifThen: [], createdAt: now },
+        { id: 'g3', type: '月', title: '6月冲刺模拟考试', kr: ['模考分数达75%'], parentId: 'g2', antiGoals: [], ifThen: [{ if: '连续3天学习超4小时', then: '第4天启动C档兜底日' }], createdAt: now },
+        { id: 'g4', type: '周', title: '本周完成第8-10章', kr: ['约12学时'], parentId: 'g3', antiGoals: [], ifThen: [], createdAt: now },
+      ];
+      this.tasks = [
+        { id: 't1', title: '学习第8章风险管理', time: '09:00', duration: 60, tags: ['grow', 'important'], priority: 'high', type: '固定', locked: true, recurring: false, completed: false, date: today, createdAt: now },
+        { id: 't2', title: '回复客户邮件', time: '14:00', duration: 30, tags: ['work'], priority: 'normal', type: '弹性', locked: false, recurring: false, completed: false, date: today, createdAt: now },
+        { id: 't3', title: '每日阅读', time: '21:00', duration: 30, tags: ['grow'], priority: 'normal', type: '固定', locked: false, recurring: true, completed: false, date: today, createdAt: now },
+      ];
+      this.weeklyHighlights = ['完成了拖延两周的方案撰写', '连续3天完成A档任务', '周三下午主动留白，状态很好'];
+      this.contacts = [
+        { id: 'c1', name: '张明', level: 1, notes: '产品经理', preferences: ['科幻小说', '咖啡'], taboos: ['周一上午'], lastContact: '3天前', birthday: '11-20', createdAt: now },
+        { id: 'c2', name: '李婷', level: 2, notes: '设计师', preferences: ['瑜伽'], taboos: [], lastContact: '2周前', birthday: '', createdAt: now },
+      ];
+      // 生成最近一周的演示打卡数据
+      const d = new Date();
+      this.checkins = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(d);
+        date.setDate(date.getDate() - i);
+        const ds = date.toISOString().slice(0, 10);
+        if (i > 1) {
+          const grades = ['A','A','B','A','B','C','A'];
+          this.checkins.push({
+            id: 'ch' + ds,
+            date: ds,
+            grade: grades[6 - i],
+            note: grades[6 - i] === 'A' ? '状态不错' : grades[6 - i] === 'C' ? '今天有点累' : '',
+            completedTasks: Math.floor(Math.random() * 5) + 1,
+            totalTasks: Math.floor(Math.random() * 3) + 3,
+            createdAt: date.toISOString(),
+          });
+        }
+      }
+      this.saveData();
+    },
+  };
+}
+</script>
+
+</body>
+</html>

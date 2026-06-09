@@ -1,0 +1,24 @@
+{
+  "id": "models",
+  "name": "思维模型",
+  "icon": "🧠",
+  "layer": "strategy",
+  "layerName": "战略规划",
+  "order": 3,
+  "status": "active",
+  "version": "1.0.0",
+  "description": "6套世界解释器 — 智能/进化/市场/社会/风险/时间模型",
+  "author": "个人之旅 OS",
+  "routes": {
+    "/models": "模型库首页",
+    "/models/intelligence": "智能模型",
+    "/models/evolution": "进化模型",
+    "/models/market": "市场模型",
+    "/models/social": "社会模型",
+    "/models/risk": "风险模型",
+    "/models/time": "时间模型"
+  },
+  "dataKeys": ["modelCards", "modelCases"],
+  "dependencies": [],
+  "permissions": []
+}

@@ -1,0 +1,295 @@
+/**
+ * ╔══════════════════════════════════════════════╗
+ * ║  Ocean Design System Theme                  ║
+ * ║  海洋主题扁平风设计系统                        ║
+ * ║  与 flat-green 主题同架构，独立可选主题         ║
+ * ╚══════════════════════════════════════════════╝
+ *
+ * Usage: 在 <html> 标签上添加 data-theme="ocean" 激活此主题
+ *        或在 JS 中调用: document.documentElement.setAttribute('data-theme', 'ocean')
+ *
+ * ⚠ 所有变量使用 --oc- 前缀，与 --fg- / --color- 完全隔离
+ */
+
+/* ================================================================
+   1. COLOR TOKENS — 语义化调色板
+   ================================================================ */
+:root,
+[data-theme="ocean"] {
+  /* ── Primary Blue Ramp (深海蓝) ── */
+  --oc-primary-50:  #e8f2fc;
+  --oc-primary-100: #cfe2f7;  /* 最浅填充 - 卡片背景 */
+  --oc-primary-200: #a7cbf0;  /* 浅色填充 - 进度条/标签背景 */
+  --oc-primary-300: #7aafe6;  /* 中浅色 - hover 状态 */
+  --oc-primary-400: #4a8fd4;  /* 中色 - 强调元素 */
+  --oc-primary-500: #2471b8;  /* 主色调 - 按钮/活跃状态 */
+  --oc-primary-600: #1a5a96;  /* 深主色 - 文字链接 */
+  --oc-primary-700: #12447a;  /* 更深主色 */
+  --oc-primary-800: #0a2e58;  /* 深蓝 - 深色模式文字 */
+  --oc-primary-900: #051c3a;  /* 最深蓝 */
+
+  /* ── Secondary Coral/Teal Ramp (珊瑚/青绿) ── */
+  --oc-coral-50:   #fef2f0;
+  --oc-coral-100:  #fde0da;
+  --oc-coral-200:  #fbc1b5;
+  --oc-coral-300:  #f89d8a;
+  --oc-coral-400:  #f47860;
+  --oc-coral-500:  #e8604c;  /* 珊瑚主色 - 警告/强调 */
+  --oc-coral-600:  #d04836;
+  --oc-coral-700:  #a83828;
+  --oc-coral-800:  #802818;
+  --oc-coral-900:  #581808;
+
+  --oc-teal-50:    #e6f7f6;
+  --oc-teal-100:   #c8eeec;
+  --oc-teal-200:   #8fdcd8;
+  --oc-teal-300:   #5cc8c2;
+  --oc-teal-400:   #36b0a8;
+  --oc-teal-500:   #1a988e;  /* 青绿主色 - 成功/信息 */
+  --oc-teal-600:   #147a72;
+  --oc-teal-700:   #0e5c56;
+  --oc-teal-800:   #08403c;
+  --oc-teal-900:   #042422;
+
+  /* ── Neutral Sand / Deep Sea Ramp (沙色/深海) ── */
+  --oc-sand-50:    #fdfdfb;
+  --oc-sand-100:   #f7f5ef;
+  --oc-sand-200:   #ede8db;
+  --oc-sand-300:   #e0d9c4;
+  --oc-sand-400:   #d0c6a8;
+  --oc-sand-500:   #b8ad8c;
+
+  --oc-deep-50:    #1e2938;
+  --oc-deep-100:   #1a2332;
+  --oc-deep-200:   #141c28;  /* 深色卡片 */
+  --oc-deep-300:   #0f1620;
+  --oc-deep-400:   #0a0f18;  /* 最深卡片 */
+  --oc-deep-500:   #060910;
+  --oc-deep-900:   #030508;
+
+  /* ── Semantic Colors ── */
+  --oc-success:     #1a988e;
+  --oc-success-bg:  #e6f7f6;
+  --oc-warning:     #e8a838;
+  --oc-warning-bg:  #fdf3e0;
+  --oc-error:       #e05252;
+  --oc-error-bg:    #fce8e8;
+  --oc-info:        #2471b8;
+  --oc-info-bg:     #e8f2fc;
+
+  /* ── Neutral / Background ── */
+  --oc-surface-base:      #f4f6f9;       /* 页面基底背景 - 浅蓝灰 */
+  --oc-surface-card:      #ffffff;       /* 卡片表面 */
+  --oc-surface-elevated:  #ffffff;       /* 浮层表面 */
+  --oc-surface-overlay:   rgba(5, 28, 58, 0.45); /* 遮罩层 */
+
+  /* ── Text Colors ── */
+  --oc-text-primary:     #051c3a;       /* 主要文字 - 深蓝黑 */
+  --oc-text-secondary:   #3d5a7c;       /* 次要文字 - 中蓝灰 */
+  --oc-text-tertiary:    #7a94b0;       /* 辅助文字 - 浅蓝灰 */
+  --oc-text-inverse:     #ffffff;       /* 反色文字（深底） */
+  --oc-text-on-primary:  #ffffff;       /* 主色上的文字 */
+  --oc-text-on-dark:     #e8f2fc;       /* 深色背景上的文字 */
+
+  /* ── Border Colors ── */
+  --oc-border-light:     rgba(36, 113, 184, 0.12);
+  --oc-border-default:   rgba(36, 113, 184, 0.18);
+  --oc-border-strong:    rgba(36, 113, 184, 0.28);
+
+  /* ── Decorative Accents ── */
+  --oc-accent-coral:     #e8604c;
+  --oc-accent-teal:      #1a988e;
+  --oc-accent-dot-blue:   #7aafe6;
+
+  /* ==============================================================
+     2. BORDER RADIUS SYSTEM — 圆角梯度
+     (与 flat-green 保持一致的结构)
+     ============================================================== */
+
+  --radius-none:    0px;
+  --radius-xs:      6px;
+  --radius-sm:      10px;
+  --radius-md:      14px;
+  --radius-lg:      20px;
+  --radius-xl:      26px;
+  --radius-2xl:     32px;
+  --radius-full:    9999px;
+
+  /* 各组件专用圆角 */
+  --radius-button-pill:     var(--radius-full);
+  --radius-button-default:  var(--radius-full);
+  --radius-card-phone:      var(--radius-2xl);
+  --radius-card-inner:      var(--radius-lg);
+  --radius-badge:           var(--radius-xs);
+  --radius-avatar:          var(--radius-md);
+  --radius-input:           var(--radius-sm);
+  --radius-toggle:          var(--radius-full);
+  --radius-progress:        var(--radius-sm);
+
+  /* ==============================================================
+     3. SHADOW/ELEVATION SYSTEM — 阴影层级
+     (海洋主题使用偏冷色调的阴影)
+     ============================================================== */
+
+  --shadow-none:     none;
+
+  /* Level 1 - 基础层叠 */
+  --shadow-sm:       0 1px 3px rgba(5, 28, 58, 0.04),
+                    0 1px 2px rgba(5, 28, 58, 0.03);
+
+  /* Level 2 - 轻微浮起 (hover) */
+  --shadow-md:       0 4px 12px rgba(5, 28, 58, 0.06),
+                    0 2px 4px rgba(5, 28, 58, 0.04);
+
+  /* Level 3 - 明显浮起 (弹窗) */
+  --shadow-lg:       0 8px 24px rgba(5, 28, 58, 0.08),
+                    0 4px 8px rgba(5, 28, 58, 0.04);
+
+  /* Level 4 - 最高层级 (Modal) */
+  --shadow-xl:       0 16px 48px rgba(5, 28, 58, 0.12),
+                    0 8px 16px rgba(5, 28, 58, 0.06);
+
+  /* 内阴影 */
+  --shadow-inset:    inset 0 1px 3px rgba(5, 28, 58, 0.06);
+
+  /* 有色光晕 (focus ring) - 蓝色光晕 */
+  --shadow-focus:    0 0 0 3px rgba(36, 113, 184, 0.25);
+
+  /* ==============================================================
+     4. TYPOGRAPHY SYSTEM (与 flat-green 一致)
+     ============================================================== */
+
+  --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                         'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+                         sans-serif;
+  --font-family-mono:    'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+
+  --text-xs:    0.6875rem;
+  --text-sm:    0.75rem;
+  --text-base:  0.875rem;
+  --text-md:    1rem;
+  --text-lg:    1.125rem;
+  --text-xl:    1.25rem;
+  --text-2xl:   1.5rem;
+  --text-3xl:   1.875rem;
+  --text-4xl:   2.25rem;
+
+  --weight-normal:   400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+
+  --leading-tight:    1.25;
+  --leading-normal:   1.5;
+  --leading-relaxed:  1.65;
+
+  --tracking-tight:   -0.02em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.02em;
+
+  /* ==============================================================
+     5. SPACING SYSTEM (与 flat-green 一致)
+     ============================================================== */
+
+  --space-0:   0;
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+
+  /* ==============================================================
+     6. TRANSITION SYSTEM (与 flat-green 一致)
+     ============================================================== */
+
+  --duration-fast:   120ms;
+  --duration-normal: 240ms;
+  --duration-slow:   400ms;
+
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.83, 0, 0.17, 1);
+
+  /* ==============================================================
+     7. Z-INDEX LAYERS (与 flat-green 一致)
+     ============================================================== */
+
+  --z-base:     0;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-overlay:  300;
+  --z-modal:    400;
+  --z-toast:    500;
+}
+
+/* ================================================================
+   DARK MODE VARIANT — 深海暗色模式
+   ================================================================ */
+[data-theme="ocean-dark"] {
+  /* Primary 蓝色在暗色下提亮 */
+  --oc-primary-50:  #051c3a;
+  --oc-primary-100: #0a2e58;  /* 暗色卡片背景 */
+  --oc-primary-200: #12447a;
+  --oc-primary-300: #1a5a96;
+  --oc-primary-400: #2471b8;
+  --oc-primary-500: #4a8fd4;  /* 暗色下主色更亮 */
+  --oc-primary-600: #7aafe6;
+  --oc-primary-700: #a7cbf0;
+  --oc-primary-800: #cfe2f7;
+  --oc-primary-900: #e8f2fc;
+
+  /* Coral 暗色下提亮 */
+  --oc-coral-50:   #581808;
+  --oc-coral-100:  #802818;
+  --oc-coral-200:  #a83828;
+  --oc-coral-300:  #d04836;
+  --oc-coral-400:  #e8604c;
+  --oc-coral-500:  #f47860;
+  --oc-coral-600:  #f89d8a;
+  --oc-coral-700:  #fbc1b5;
+  --oc-coral-800:  #fde0da;
+  --oc-coral-900:  #fef2f0;
+
+  /* Teal 暗色下提亮 */
+  --oc-teal-50:    #042422;
+  --oc-teal-100:   #08403c;
+  --oc-teal-200:   #0e5c56;
+  --oc-teal-300:   #147a72;
+  --oc-teal-400:   #1a988e;
+  --oc-teal-500:   #36b0a8;
+  --oc-teal-600:   #5cc8c2;
+  --oc-teal-700:   #8fdcd8;
+  --oc-teal-800:   #c8eeec;
+  --oc-teal-900:   #e6f7f6;
+
+  /* Surface 反转 */
+  --oc-surface-base:      #0a0f18;
+  --oc-surface-card:      #141c28;
+  --oc-surface-elevated:  #1a2332;
+  --oc-surface-overlay:   rgba(0, 0, 0, 0.65);
+
+  /* Text 反转 */
+  --oc-text-primary:     #e8f2fc;
+  --oc-text-secondary:   #a7cbf0;
+  --oc-text-tertiary:    #5a80a8;
+  --oc-text-inverse:     #051c3a;
+  --oc-text-on-primary:  #051c3a;
+  --oc-text-on-dark:     #e8f2fc;
+
+  /* Border */
+  --oc-border-light:     rgba(74, 143, 212, 0.10);
+  --oc-border-default:   rgba(74, 143, 212, 0.15);
+  --oc-border-strong:    rgba(74, 143, 212, 0.24);
+
+  /* Shadow 深色模式加深 */
+  --shadow-sm:    0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-md:    0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg:    0 8px 24px rgba(0, 0, 0, 0.35), 0 4px 8px rgba(0, 0, 0, 0.25);
+  --shadow-xl:    0 16px 48px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3);
+  --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-focus: 0 0 0 3px rgba(74, 143, 212, 0.35);
+}

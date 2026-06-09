@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#F8F6F3"/>
+  <circle cx="256" cy="220" r="120" fill="none" stroke="#5B8C9B" stroke-width="16"/>
+  <polyline points="256 140 256 220 310 250" fill="none" stroke="#5B8C9B" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="256" y="400" font-family="Noto Sans SC, sans-serif" font-size="48" fill="#5B8C9B" text-anchor="middle" font-weight="600">个人之旅</text>
+</svg>

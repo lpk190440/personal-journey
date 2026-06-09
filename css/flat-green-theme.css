@@ -1,0 +1,248 @@
+/**
+ * ╔══════════════════════════════════════════════╗
+ * ║  Flat-Green Design System Theme              ║
+ * ║  牛油果绿扁平风设计系统                        ║
+ * ║  基于 UI设计-扁平风 (Dmi8t) 提取              ║
+ * ╚══════════════════════════════════════════════╝
+ *
+ * Usage: 在 <html> 标签上添加 data-theme="flat-green" 激活此主题
+ *        或在 JS 中调用: document.documentElement.setAttribute('data-theme', 'flat-green')
+ */
+
+/* ================================================================
+   1. COLOR TOKENS — 语义化调色板
+   ================================================================ */
+:root,
+[data-theme="flat-green"] {
+  /* ── Primary Green Ramp (牛油果绿) ── */
+  --fg-primary-50:  #f0f7e8;
+  --fg-primary-100: #dcf0c5;  /* 最浅填充 - 卡片背景 */
+  --fg-primary-200: #c4df9b;  /* 浅色填充 - 进度条/标签背景 */
+  --fg-primary-300: #a8c86f;  /* 中浅色 - hover 状态 */
+  --fg-primary-400: #8fb54a;  /* 中色 - 强调元素 */
+  --fg-primary-500: #7aa33a;  /* 主色调 - 按钮/活跃状态 */
+  --fg-primary-600: #62852d;  /* 深主色 - 文字链接 */
+  --fg-primary-700: #4a6722;  /* 更深主色 */
+  --fg-primary-800: #2d4015;  /* 深绿 - 深色模式文字 */
+  --fg-primary-900: #1a260a;  /* 最深绿 */
+
+  /* ── Secondary Accent (深黑灰) ── */
+  --fg-dark-50:    #2c2c2c;
+  --fg-dark-100:   #262626;
+  --fg-dark-200:   #1f1f1f;
+  --fg-dark-300:   #181818;
+  --fg-dark-400:   #121212;
+  --fg-dark-500:   #0e0e0e;
+  --fg-dark-900:   #0a0a0a;
+
+  /* ── Semantic Colors ── */
+  --fg-success:     #7aa33a;
+  --fg-success-bg:  #f0f7e8;
+  --fg-warning:     #e8a838;
+  --fg-warning-bg:  #fdf3e0;
+  --fg-error:       #e05252;
+  --fg-error-bg:    #fce8e8;
+  --fg-info:        #5b9bd5;
+  --fg-info-bg:     #edf4fc;
+
+  /* ── Neutral / Background ── */
+  --fg-surface-base:      #f5f7ef;       /* 页面基底背景 - 浅牛油果 */
+  --fg-surface-card:      #ffffff;       /* 卡片表面 */
+  --fg-surface-elevated:  #ffffff;       /* 浮层表面 */
+  --fg-surface-overlay:   rgba(42, 48, 25, 0.45); /* 遮罩层 */
+
+  /* ── Text Colors ── */
+  --fg-text-primary:     #1a260a;       /* 主要文字 - 深墨绿 */
+  --fg-text-secondary:   #5a6b44;       /* 次要文字 - 中绿灰 */
+  --fg-text-tertiary:    #8a9a70;       /* 辅助文字 - 浅绿灰 */
+  --fg-text-inverse:     #ffffff;       /* 反色文字（深底） */
+  --fg-text-on-primary:  #ffffff;       /* 主色上的文字 */
+  --fg-text-on-dark:     #f0f7e8;       /* 深色背景上的文字 */
+
+  /* ── Border Colors ── */
+  --fg-border-light:     rgba(122, 163, 58, 0.15);
+  --fg-border-default:   rgba(122, 163, 58, 0.22);
+  --fg-border-strong:    rgba(122, 163, 58, 0.35);
+
+  /* ── Decorative Accents ── */
+  --fg-accent-coral:     #f0a090;
+  --fg-accent-blue:      #a0c8e8;
+  --fg-accent-dot-green:  #a8c86f;
+
+  /* ==============================================================
+     2. BORDER RADIUS SYSTEM — 圆角梯度
+     ============================================================== */
+
+  /* 圆角等级体系 (基于设计稿中大量使用的圆角卡片和按钮) */
+  --radius-none:    0px;
+  --radius-xs:      6px;    /* 小标签、徽章 */
+  --radius-sm:      10px;   /* 输入框、小按钮 */
+  --radius-md:      14px;   /* 默认按钮、小卡片 */
+  --radius-lg:      20px;   /*** 主卡片圆角 - 设计稿中最常用 ***/ 
+  --radius-xl:      26px;   /* 大容器、模态框 */
+  --radius-2xl:     32px;   /*** 手机外壳级圆角 ***/ 
+  --radius-full:    9999px; /* 胶囊形(药丸形) */
+
+  /* 各组件专用圆角 */
+  --radius-button-pill: var(--radius-full);     /* 药丸按钮 */
+  --radius-button-default: var(--radius-full);  /* 默认按钮全圆角 */
+  --radius-card-phone:     var(--radius-2xl);   /* 手机外壳 */
+  --radius-card-inner:     var(--radius-lg);    /* 内部卡片 */
+  --radius-badge:          var(--radius-xs);    /* 徽章标签 */
+  --radius-avatar:         var(--radius-md);    /* 头像 */
+  --radius-input:          var(--radius-sm);    /* 输入框 */
+  --radius-toggle:         var(--radius-full);  /* 开关 */
+  --radius-progress:       var(--radius-sm);    /* 进度条 */
+
+  /* ==============================================================
+     3. SHADOW/ELEVATION SYSTEM — 阴影层级
+     ============================================================== */
+
+  /**
+   * 扁平风阴影策略：极简 + 微妙
+   * 设计稿特征：几乎无投影，靠颜色对比和边框区分层级
+   * 阴影仅用于功能性强调（悬浮状态、拖拽）
+   */
+  --shadow-none:     none;
+
+  /* Level 1 - 基础层叠 (默认卡片) */
+  --shadow-sm:       0 1px 3px rgba(26, 38, 10, 0.04),
+                    0 1px 2px rgba(26, 38, 10, 0.03);
+
+  /* Level 2 - 轻微浮起 (hover 状态) */
+  --shadow-md:       0 4px 12px rgba(26, 38, 10, 0.06),
+                    0 2px 4px rgba(26, 38, 10, 0.04);
+
+  /* Level 3 - 明显浮起 (弹窗、下拉菜单) */
+  --shadow-lg:       0 8px 24px rgba(26, 38, 10, 0.08),
+                    0 4px 8px rgba(26, 38, 10, 0.04);
+
+  /* Level 4 - 最高层级 (Modal、Toast) */
+  --shadow-xl:       0 16px 48px rgba(26, 38, 10, 0.12),
+                    0 8px 16px rgba(26, 38, 10, 0.06);
+
+  /* 内阴影 (输入框 focus 等) */
+  --shadow-inset:    inset 0 1px 3px rgba(26, 38, 10, 0.06);
+
+  /* 有色光晕 (focus ring) */
+  --shadow-focus:    0 0 0 3px rgba(122, 163, 58, 0.25);
+
+  /* ==============================================================
+     4. TYPOGRAPHY SYSTEM
+     ============================================================== */
+
+  /* 字体族 */
+  --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+                         'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei',
+                         sans-serif;
+  --font-family-mono:    'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+
+  /* 字号阶梯 */
+  --text-xs:    0.6875rem;  /* 11px  - 极小标注 */
+  --text-sm:    0.75rem;    /* 12px  - 辅助信息 */
+  --text-base:  0.875rem;   /* 14px  - 正文基准 */
+  --text-md:    1rem;       /* 16px  - 小标题 */
+  --text-lg:    1.125rem;   /* 18px  - 卡片标题 */
+  --text-xl:    1.25rem;    /* 20px  - 页面标题 */
+  --text-2xl:   1.5rem;     /* 24px  - 大标题 */
+  --text-3xl:   1.875rem;   /* 30px  - 展示文字(TODU级别) */
+  --text-4xl:   2.25rem;    /* 36px  - 英雄文字 */
+
+  /* 字重 */
+  --weight-normal:  400;
+  --weight-medium:  500;
+  --weight-semibold: 600;
+  --weight-bold:    700;
+
+  /* 行高 */
+  --leading-tight:   1.25;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.65;
+
+  /* 字间距 */
+  --tracking-tight:  -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.02em;
+
+  /* ==============================================================
+     5. SPACING SYSTEM
+     ============================================================== */
+
+  --space-0:   0;
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+
+  /* ==============================================================
+     6. TRANSITION SYSTEM
+     ============================================================== */
+
+  --duration-fast:   120ms;
+  --duration-normal: 240ms;
+  --duration-slow:   400ms;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.83, 0, 0.17, 1);
+
+  /* ==============================================================
+     7. Z-INDEX LAYERS
+     ============================================================== */
+
+  --z-base:     0;
+  --z-dropdown: 100;
+  --z-sticky:   200;
+  --z-overlay:  300;
+  --z-modal:    400;
+  --z-toast:    500;
+}
+
+/* ================================================================
+   DARK MODE VARIANT — 深色模式变体
+   ================================================================ */
+[data-theme="flat-green-dark"] {
+  /* Primary 绿色在暗色下提亮 */
+  --fg-primary-50:  #1a260a;
+  --fg-primary-100: #2d4015;  /* 暗色卡片背景 */
+  --fg-primary-200: #3d5520;
+  --fg-primary-300: #4e6b28;
+  --fg-primary-400: #5f8030;
+  --fg-primary-500: #8fb54a;  /* 暗色下主色更亮 */
+  --fg-primary-600: #a8c86f;
+  --fg-primary-700: #c4df9b;
+  --fg-primary-800: #dcf0c5;
+  --fg-primary-900: #f0f7e8;
+
+  /* Surface 反转 */
+  --fg-surface-base:      #141a0c;
+  --fg-surface-card:      #1e2a12;
+  --fg-surface-elevated:  #26331a;
+  --fg-surface-overlay:   rgba(0, 0, 0, 0.6);
+
+  /* Text 反转 */
+  --fg-text-primary:     #f0f7e8;
+  --fg-text-secondary:   #a8c86f;
+  --fg-text-tertiary:    #6b8045;
+  --fg-text-inverse:     #1a260a;
+  --fg-text-on-primary:  #1a260a;
+  --fg-text-on-dark:     #f0f7e8;
+
+  /* Border */
+  --fg-border-light:     rgba(143, 181, 74, 0.12);
+  --fg-border-default:   rgba(143, 181, 74, 0.18);
+  --fg-border-strong:    rgba(143, 181, 74, 0.28);
+
+  /* Shadow 深色模式加深 */
+  --shadow-sm:    0 1px 3px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.15);
+  --shadow-md:    0 4px 12px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+  --shadow-lg:    0 8px 24px rgba(0, 0, 0, 0.35), 0 4px 8px rgba(0, 0, 0, 0.25);
+  --shadow-xl:    0 16px 48px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.3);
+  --shadow-inset: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+  --shadow-focus: 0 0 0 3px rgba(143, 181, 74, 0.35);
+}

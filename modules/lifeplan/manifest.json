@@ -1,0 +1,23 @@
+{
+  "id": "lifeplan",
+  "name": "人生规划",
+  "icon": "🧭",
+  "layer": "strategy",
+  "layerName": "战略规划",
+  "order": 2,
+  "status": "active",
+  "version": "1.0.0",
+  "description": "愿景/OKR目标/周期性复盘/可视化看板",
+  "author": "个人之旅 OS",
+  "routes": {
+    "/lifeplan": "人生规划首页",
+    "/lifeplan/vision": "愿景管理",
+    "/lifeplan/objectives": "OKR目标",
+    "/lifeplan/review": "复盘日记",
+    "/lifeplan/kanban": "进度看板",
+    "/lifeplan/graph": "链接图谱"
+  },
+  "dataKeys": ["visions", "objectives", "reviews"],
+  "dependencies": ["goals"],
+  "permissions": []
+}

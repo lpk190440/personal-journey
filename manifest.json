@@ -1,0 +1,20 @@
+{
+  "name": "个人之旅",
+  "short_name": "个人之旅",
+  "description": "温和极简的零焦虑个人生活操作系统",
+  "theme_color": "#F8F6F3",
+  "background_color": "#F8F6F3",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "scope": "/",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    { "name": "智能录入", "url": "/", "description": "一句话添加任务" },
+    { "name": "今日打卡", "url": "/", "description": "查看打卡记录" }
+  ]
+}

@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>个人之旅 - 产品路线图与优化策略</title>
+<style>
+  :root {
+    --accent: #5B8C9B;
+    --accent-light: rgba(91,140,155,0.12);
+    --green: #4A9E6B;
+    --green-bg: rgba(74,158,107,0.1);
+    --red: #C75450;
+    --red-bg: rgba(199,84,80,0.08);
+    --amber: #C49630;
+    --amber-bg: rgba(196,150,48,0.1);
+    --blue: #4A7EC7;
+    --blue-bg: rgba(74,126,199,0.08);
+    --purple: #7B6EC7;
+    --purple-bg: rgba(123,110,199,0.08);
+    --gray: #888780;
+    --gray-bg: rgba(136,135,128,0.08);
+    --bg: #FAFAF8;
+    --card-bg: #FFFFFF;
+    --border: rgba(0,0,0,0.08);
+    --text: #2C2C2A;
+    --text-secondary: #6B6B68;
+    --text-weak: #9E9E9A;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --font: -apple-system, 'PingFang SC', 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.7; font-size: 14px; }
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* Header */
+  .header { text-align: center; margin-bottom: 48px; }
+  .header h1 { font-size: 28px; font-weight: 600; margin-bottom: 8px; }
+  .header .subtitle { color: var(--text-secondary); font-size: 14px; }
+  .header .meta { color: var(--text-weak); font-size: 12px; margin-top: 4px; }
+
+  /* Metrics */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 40px; }
+  .metric { background: var(--card-bg); border-radius: var(--radius-md); padding: 16px; border: 0.5px solid var(--border); text-align: center; }
+  .metric .num { font-size: 24px; font-weight: 600; }
+  .metric .num.green { color: var(--green); }
+  .metric .num.accent { color: var(--accent); }
+  .metric .num.amber { color: var(--amber); }
+  .metric .num.blue { color: var(--blue); }
+  .metric .label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+
+  /* Section */
+  .section { margin-bottom: 40px; }
+  .section h2 { font-size: 20px; font-weight: 600; margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--accent); display: inline-block; }
+  .section h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; margin-top: 24px; color: var(--accent); }
+
+  /* Cards */
+  .card { background: var(--card-bg); border-radius: var(--radius-md); padding: 20px; border: 0.5px solid var(--border); margin-bottom: 16px; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+  .card-title { font-size: 16px; font-weight: 600; }
+  .card-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .badge-done { background: var(--green-bg); color: var(--green); }
+  .badge-active { background: var(--accent-light); color: var(--accent); }
+  .badge-plan { background: var(--blue-bg); color: var(--blue); }
+  .badge-future { background: var(--purple-bg); color: var(--purple); }
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  th { text-align: left; font-size: 12px; color: var(--text-secondary); font-weight: 500; padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 0.5px solid var(--border); font-size: 13px; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+
+  /* Progress */
+  .progress-bar { display: inline-flex; align-items: center; gap: 6px; }
+  .progress-track { width: 80px; height: 6px; border-radius: 3px; background: var(--gray-bg); overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s ease; }
+  .progress-label { font-size: 12px; font-weight: 500; }
+
+  /* Priority tags */
+  .p0 { color: var(--red); font-weight: 500; }
+  .p1 { color: var(--amber); font-weight: 500; }
+  .p2 { color: var(--blue); font-weight: 500; }
+
+  /* Impact */
+  .impact-high { background: var(--red-bg); padding: 2px 6px; border-radius: 4px; font-size: 12px; color: var(--red); }
+  .impact-mid { background: var(--amber-bg); padding: 2px 6px; border-radius: 4px; font-size: 12px; color: var(--amber); }
+  .impact-low { background: var(--blue-bg); padding: 2px 6px; border-radius: 4px; font-size: 12px; color: var(--blue); }
+
+  /* Delta */
+  .delta-up { color: var(--green); font-size: 11px; }
+  .delta-same { color: var(--gray); font-size: 11px; }
+
+  /* Feature list */
+  .feature-list { list-style: none; }
+  .feature-list li { padding: 8px 0; border-bottom: 0.5px solid var(--border); display: flex; align-items: flex-start; gap: 8px; }
+  .feature-list li:last-child { border-bottom: none; }
+  .feature-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+  .dot-done { background: var(--green); }
+  .dot-active { background: var(--accent); }
+  .dot-plan { background: var(--blue); }
+  .dot-future { background: var(--purple); }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 32px; }
+  .timeline::before { content: ''; position: absolute; left: 12px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .timeline-item { position: relative; margin-bottom: 24px; }
+  .timeline-item::before { content: ''; position: absolute; left: -24px; top: 6px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--accent); background: white; }
+  .timeline-item.done::before { background: var(--green); border-color: var(--green); }
+  .timeline-item.active::before { background: var(--accent); border-color: var(--accent); }
+  .timeline-item .version { font-size: 15px; font-weight: 600; }
+  .timeline-item .date { font-size: 12px; color: var(--text-weak); margin-left: 8px; }
+  .timeline-item .desc { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+  /* Blockquote */
+  blockquote { background: var(--accent-light); border-left: 3px solid var(--accent); padding: 12px 16px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; margin: 16px 0; font-size: 13px; }
+
+  /* Tech debt */
+  .debt-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+  .debt-item:last-child { border-bottom: none; }
+  .debt-severity { padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+  .severity-high { background: var(--red-bg); color: var(--red); }
+  .severity-mid { background: var(--amber-bg); color: var(--amber); }
+  .severity-low { background: var(--blue-bg); color: var(--blue); }
+
+  /* Responsive */
+  @media (max-width: 640px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .container { padding: 20px 16px 60px; }
+    .header h1 { font-size: 22px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<div class="header">
+  <h1>个人之旅 - 产品路线图</h1>
+  <div class="subtitle">comprehensive product roadmap & optimization strategy</div>
+  <div class="meta">基于 V1.3 状态评估 | 更新于 2026-06-09 00:47 | 版本 V1.4-preview</div>
+</div>
+
+<!-- Metrics -->
+<div class="metrics">
+  <div class="metric">
+    <div class="num accent">61.4%</div>
+    <div class="label">当前覆盖率</div>
+  </div>
+  <div class="metric">
+    <div class="num green">3906</div>
+    <div class="label">代码行数</div>
+  </div>
+  <div class="metric">
+    <div class="num amber">115+</div>
+    <div class="label">已实现方法</div>
+  </div>
+  <div class="metric">
+    <div class="num blue">14</div>
+    <div class="label">功能模块</div>
+  </div>
+</div>
+
+<!-- ========== 第一章：版本演进时间线 ========== -->
+<h2 class="section">一、版本演进时间线</h2>
+
+<div class="timeline">
+  <div class="timeline-item done">
+    <span class="version">V1.0</span><span class="date">6月8日</span>
+    <div class="desc">初始版本。10个页面模块、NLP正则解析、打卡热力图、番茄钟、人脉管理、系统弹性。3个模块达标，覆盖率38.7%。</div>
+  </div>
+  <div class="timeline-item done">
+    <span class="version">V1.1</span><span class="date">6月8日 23:30</span>
+    <div class="desc">基础补强。CRUD全功能、FAB快速添加、首页一键打卡、SOS紧急入口、循环任务自动克隆、数据导入/导出、情绪滑块。12项功能增强。</div>
+  </div>
+  <div class="timeline-item done">
+    <span class="version">V1.2</span><span class="date">6月9日 00:20</span>
+    <div class="desc">体验升级。人脉结构化表单、社交节奏提醒、时间轴筛选栏、弹性方案预览、每日复盘入口、番茄钟专注模式、个性化设置12+项。8项功能增强。</div>
+  </div>
+  <div class="timeline-item active">
+    <span class="version">V1.4</span><span class="date">6月9日 00:40 - 进行中</span>
+    <div class="desc">AI全面接入。DeepSeek API集成：NLP语义解析、AI深度洞察、AI晚间复盘。双引擎架构（正则即时+AI异步）。</div>
+  </div>
+  <div class="timeline-item">
+    <span class="version">V1.5</span><span class="date">预计 6月15日</span>
+    <div class="desc">深度完善。Notification API通知系统、云数据同步、习惯追踪模块、Web Speech语音输入。目标覆盖率82%。</div>
+  </div>
+  <div class="timeline-item">
+    <span class="version">V2.0</span><span class="date">预计 7月1日</span>
+    <div class="desc">系统进化。四大中枢引擎（决策/学习/监控/画像）、模块化重构（Vite）、IndexedDB存储层、API Key安全存储。目标覆盖率92%。</div>
+  </div>
+</div>
+
+<blockquote>
+<strong>演进策略</strong>：采用"基础补全 → AI增强 → 系统进化"三阶段路径。前两阶段在单文件架构内快速迭代，V2.0进行架构级重构。每个版本的目标覆盖率增幅控制在13-22个百分点，确保可验证、可回滚。
+</blockquote>
+
+<!-- ========== 第二章：各版本详细规划 ========== -->
+<h2 class="section">二、版本详细规划</h2>
+
+<!-- V1.4 -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">V1.4 - AI 全面接入</div>
+    <span class="card-badge badge-active">进行中</span>
+  </div>
+  <table>
+    <thead><tr><th style="width:20%">功能项</th><th>描述</th><th style="width:12%">优先级</th><th style="width:14%">预期影响</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>NLP 语义解析升级</strong></td>
+        <td>DeepSeek API 替代正则链，支持"帮我安排明天"级语义理解。双引擎架构：正则即时预览(0.3s) + AI异步增强。Prompt包含用户目标和近期任务上下文。</td>
+        <td><span class="p0">P0</span></td>
+        <td><span class="impact-high">高</span></td>
+      </tr>
+      <tr>
+        <td><strong>AI 深度洞察</strong></td>
+        <td>基于本周数据（打卡/任务/番茄/精力/目标进度）生成200字个性化分析和建议。三档话术（温暖/专业/简洁），自动匹配用户偏好。</td>
+        <td><span class="p0">P0</span></td>
+        <td><span class="impact-high">高</span></td>
+      </tr>
+      <tr>
+        <td><strong>AI 晚间复盘</strong></td>
+        <td>基于当日数据（完成率/情绪/番茄/高光）生成150字总结。包含回顾、未完成分析、情绪总结、明日建议四个维度。</td>
+        <td><span class="p1">P1</span></td>
+        <td><span class="impact-mid">中</span></td>
+      </tr>
+      <tr>
+        <td><strong>AI 设置总开关</strong></td>
+        <td>设置页新增AI开关，关闭后全量降级为本地规则引擎。API Key硬编码，后续V2.0迁移至加密存储。</td>
+        <td><span class="p1">P1</span></td>
+        <td><span class="impact-low">低</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+    <span class="progress-label" style="color:var(--text-weak);">覆盖率目标</span>
+    <div class="progress-bar">
+      <div class="progress-track"><div class="progress-fill" style="width:75%; background:var(--accent);"></div></div>
+      <span class="progress-label">61.4% → 75%</span>
+    </div>
+  </div>
+</div>
+
+<!-- V1.5 -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">V1.5 - 深度完善</div>
+    <span class="card-badge badge-plan">规划中</span>
+  </div>
+  <table>
+    <thead><tr><th style="width:20%">功能项</th><th>描述</th><th style="width:12%">优先级</th><th style="width:14%">预期影响</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Notification API 通知</strong></td>
+        <td>接入浏览器通知API：任务时间前15分钟提醒、每日21:00未打卡提醒、番茄钟结束提醒、社交节奏提醒。通过Service Worker后台同步实现定时检查。</td>
+        <td><span class="p0">P0</span></td>
+        <td><span class="impact-high">高</span></td>
+      </tr>
+      <tr>
+        <td><strong>云数据同步</strong></td>
+        <td>JSON导入/导出升级为云端同步方案。方案A：GitHub Gist作为免费后端（用户授权后自动备份）。方案B：WebDAV（坚果云等）。自动同步间隔30分钟。</td>
+        <td><span class="p0">P0</span></td>
+        <td><span class="impact-high">高</span></td>
+      </tr>
+      <tr>
+        <td><strong>习惯追踪模块</strong></td>
+        <td>独立于打卡的习惯追踪系统。支持"每天阅读30分钟"类持续性行为追踪，30天完成曲线，连续天数统计，灵活周期（每天/每周N次）。</td>
+        <td><span class="p1">P1</span></td>
+        <td><span class="impact-mid">中</span></td>
+      </tr>
+      <tr>
+        <td><strong>Web Speech 语音输入</strong></td>
+        <td>接入Web Speech API，NLP页面支持语音输入任务描述。自动转文字后走正常NLP解析链。移动端体验大幅提升。</td>
+        <td><span class="p1">P1</span></td>
+        <td><span class="impact-mid">中</span></td>
+      </tr>
+      <tr>
+        <td><strong>任务批量操作</strong></td>
+        <td>长按多选模式：批量删除、批量改标签、批量改优先级。适合周初批量清理上周遗留任务。</td>
+        <td><span class="p2">P2</span></td>
+        <td><span class="impact-low">低</span></td>
+      </tr>
+      <tr>
+        <td><strong>6色主题预设</strong></td>
+        <td>在莫兰迪色系基础上提供6套配色方案（当前蓝绿/暖粉/森林/海洋/日落/暗夜），一键切换。CSS变量映射已就绪。</td>
+        <td><span class="p2">P2</span></td>
+        <td><span class="impact-low">低</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+    <span class="progress-label" style="color:var(--text-weak);">覆盖率目标</span>
+    <div class="progress-bar">
+      <div class="progress-track"><div class="progress-fill" style="width:82%; background:var(--blue);"></div></div>
+      <span class="progress-label">75% → 82%</span>
+    </div>
+  </div>
+</div>
+
+<!-- V2.0 -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">V2.0 - 系统进化</div>
+    <span class="card-badge badge-future">远期规划</span>
+  </div>
+  <table>
+    <thead><tr><th style="width:20%">功能项</th><th>描述</th><th style="width:12%">优先级</th><th style="width:14%">预期影响</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>决策引擎</strong></td>
+        <td>智能调度系统：根据任务优先级+精力曲线+依赖关系+历史效率数据，自动生成最优时间排列方案。用户可接受/微调/拒绝。</td>
+        <td><span class="p0">P0</span></td>
+        <td><span class="impact-high">高</span></td>
+      </tr>
+      <tr>
+        <td><strong>学习引擎</strong></td>
+        <td>用户行为建模：学习用户的高效时段、任务偏好、精力模式。随着使用时间增长，建议越来越精准。本地轻量级模型，不依赖云端。</td>
+        <td><span class="p1">P1</span></td>
+        <td><span class="impact-high">高</span></td>
+      </tr>
+      <tr>
+        <td><strong>监控引擎</strong></td>
+        <td>主动干预系统：检测连续低能期（3天C档）→ 主动建议降低难度；检测连续加班 → 增加留白比例；检测社交脱节 → 提升社交任务优先级。</td>
+        <td><span class="p1">P1</span></td>
+        <td><span class="impact-high">高</span></td>
+      </tr>
+      <tr>
+        <td><strong>画像引擎</strong></td>
+        <td>用户能力模型：基于任务完成率、番茄钟数据、目标达成率生成"效率画像"——深度工作偏好、最佳时段、任务类型倾向、压力阈值。</td>
+        <td><span class="p2">P2</span></td>
+        <td><span class="impact-mid">中</span></td>
+      </tr>
+      <tr>
+        <td><strong>架构重构（Vite）</strong></td>
+        <td>3906行单文件 → Vite组件化：每页面一个.vue组件，共享状态管理（Pinia），按需加载。首屏加载降至2s以内。</td>
+        <td><span class="p0">P0</span></td>
+        <td><span class="impact-high">高</span></td>
+      </tr>
+      <tr>
+        <td><strong>IndexedDB 存储层</strong></td>
+        <td>localStorage(5MB限制) → IndexedDB(无限制)。支持海量历史数据、快速索引查询、后台事务写入。为学习引擎提供数据基础。</td>
+        <td><span class="p0">P0</span></td>
+        <td><span class="impact-high">高</span></td>
+      </tr>
+      <tr>
+        <td><strong>API Key 安全存储</strong></td>
+        <td>从硬编码迁移至浏览器加密存储（Crypto API）。用户输入一次后加密保存，传输时解密。支持多AI服务商切换。</td>
+        <td><span class="p1">P1</span></td>
+        <td><span class="impact-mid">中</span></td>
+      </tr>
+      <tr>
+        <td><strong>目标智能拆解</strong></td>
+        <td>输入模糊目标（如"学好英语"），AI+规则引擎辅助拆解为SMART目标链：年目标→季OKR→月里程碑→周任务→日行动。</td>
+        <td><span class="p1">P1</span></td>
+        <td><span class="impact-mid">中</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px;">
+    <span class="progress-label" style="color:var(--text-weak);">覆盖率目标</span>
+    <div class="progress-bar">
+      <div class="progress-track"><div class="progress-fill" style="width:92%; background:var(--purple);"></div></div>
+      <span class="progress-label">82% → 92%</span>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 第三章：技术债务清单 ========== -->
+<h2 class="section">三、技术债务清单</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">当前技术债务</div>
+    <span class="card-badge" style="background:var(--red-bg); color:var(--red);">8项待清理</span>
+  </div>
+  <table>
+    <thead><tr><th style="width:5%">#</th><th style="width:22%">债务项</th><th style="width:10%">严重度</th><th style="width:10%">计划版本</th><th>描述与清理方案</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>单文件架构</td>
+        <td><span class="debt-severity severity-high">高</span></td>
+        <td>V2.0</td>
+        <td>3906行单HTML包含全部逻辑。维护成本随功能增长指数级上升。V2.0迁移至Vite+Vue组件化架构。</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>API Key 硬编码</td>
+        <td><span class="debt-severity severity-high">高</span></td>
+        <td>V1.5</td>
+        <td>API Key明文写在JS中，代码仓库泄露风险。V1.5迁移至Crypto API加密存储+用户输入。</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>localStorage 容量</td>
+        <td><span class="debt-severity severity-mid">中</span></td>
+        <td>V2.0</td>
+        <td>localStorage 5MB限制，历史数据超过6个月可能溢出。V2.0迁移至IndexedDB。</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>无虚拟滚动</td>
+        <td><span class="debt-severity severity-mid">中</span></td>
+        <td>V1.5</td>
+        <td>时间轴长列表（100+任务）直接DOM渲染，低端设备卡顿。V1.5引入虚拟滚动。</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>无测试覆盖</td>
+        <td><span class="debt-severity severity-mid">中</span></td>
+        <td>V2.0</td>
+        <td>零单元测试、零E2E测试。V2.0组件化后引入Vitest+Playwright，核心方法80%覆盖。</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>CSS 内联无设计系统</td>
+        <td><span class="debt-severity severity-low">低</span></td>
+        <td>V2.0</td>
+        <td>CSS变量已定义但无原子类/组件样式规范。V2.0建立Design Token系统+Tailwind原子类。</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>Alpine.js 版本锁定</td>
+        <td><span class="debt-severity severity-low">低</span></td>
+        <td>V2.0</td>
+        <td>V2.0迁移至Vue 3 Composition API时自然解决。当前Alpine.js 3.14.8功能满足需求。</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>Service Worker 粗粒度</td>
+        <td><span class="debt-severity severity-low">低</span></td>
+        <td>V1.5</td>
+        <td>当前SW缓存策略过于简单（HTML=Network First）。V1.5优化为版本化缓存+增量更新。</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ========== 第四章：性能优化策略 ========== -->
+<h2 class="section">四、性能优化策略</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">性能优化路线</div>
+  </div>
+  <table>
+    <thead><tr><th style="width:22%">优化项</th><th style="width:12%">当前</th><th style="width:12%">目标</th><th style="width:12%">计划版本</th><th>技术方案</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>首屏加载时间</strong></td>
+        <td>~3.5s</td>
+        <td>&lt; 2s</td>
+        <td>V2.0</td>
+        <td>代码拆分（路由懒加载）+ CDN预连接 + Service Worker预缓存 + Alpine→Vue Tree-shaking</td>
+      </tr>
+      <tr>
+        <td><strong>JS 包体积</strong></td>
+        <td>169KB</td>
+        <td>&lt; 80KB</td>
+        <td>V2.0</td>
+        <td>组件化后按需加载各页面，首屏只加载首页+路由。Alpine.js(15KB)→Vue Runtime(33KB gzip)。</td>
+      </tr>
+      <tr>
+        <td><strong>时间轴渲染</strong></td>
+        <td>DOM全量</td>
+        <td>虚拟滚动</td>
+        <td>V1.5</td>
+        <td>引入虚拟列表（仅渲染可视区域±缓冲区的任务卡片），100+任务时性能提升10x。</td>
+      </tr>
+      <tr>
+        <td><strong>数据存储</strong></td>
+        <td>localStorage</td>
+        <td>IndexedDB</td>
+        <td>V2.0</td>
+        <td>消除5MB限制，支持索引查询（按日期/标签/完成状态快速过滤），后台事务写入不阻塞UI。</td>
+      </tr>
+      <tr>
+        <td><strong>AI 响应延迟</strong></td>
+        <td>~3s</td>
+        <td>&lt; 2s</td>
+        <td>V1.4+</td>
+        <td>Prompt优化（减少token）+ 流式输出（SSE）+ 本地缓存相似查询结果（7天LRU）。</td>
+      </tr>
+      <tr>
+        <td><strong>动画帧率</strong></td>
+        <td>~55fps</td>
+        <td>60fps</td>
+        <td>V1.5</td>
+        <td>CSS transform替代top/left动画，will-change提示，减少重排。页面切换使用GPU加速。</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ========== 第五章：用户体验优化 ========== -->
+<h2 class="section">五、用户体验优化</h2>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">交互流程优化</div>
+  </div>
+  <table>
+    <thead><tr><th style="width:18%">操作路径</th><th style="width:10%">当前步骤</th><th style="width:10%">目标步骤</th><th style="width:10%">减少</th><th>优化方案</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>添加任务</strong></td>
+        <td>6步</td>
+        <td>1步</td>
+        <td>-83%</td>
+        <td>V1.4：首页FAB+AI语义理解。输入"明天3点开会"→AI自动解析→回车确认。</td>
+      </tr>
+      <tr>
+        <td><strong>每日打卡</strong></td>
+        <td>4步</td>
+        <td>1步</td>
+        <td>-75%</td>
+        <td>V1.1：首页ABC档一键打卡。后续V1.5支持手势打卡（上滑=打卡）。</td>
+      </tr>
+      <tr>
+        <td><strong>启动番茄钟</strong></td>
+        <td>3步</td>
+        <td>1步</td>
+        <td>-67%</td>
+        <td>V1.2：长按任务卡片→自动启动番茄钟+跳转专注页面。</td>
+      </tr>
+      <tr>
+        <td><strong>紧急重排</strong></td>
+        <td>5步</td>
+        <td>2步</td>
+        <td>-60%</td>
+        <td>V1.1：首页SOS按钮→弹性方案预览→确认。V2.0决策引擎自动生成最优方案。</td>
+      </tr>
+      <tr>
+        <td><strong>查看洞察</strong></td>
+        <td>3步</td>
+        <td>0步</td>
+        <td>-100%</td>
+        <td>V1.4：AI洞察自动生成+首页摘要卡片展示。用户无需主动查看。</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">未完成的 UX 优化项</div>
+  </div>
+  <table>
+    <thead><tr><th style="width:20%">优化项</th><th style="width:10%">优先级</th><th style="width:12%">计划版本</th><th>描述</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>手势交互</strong></td>
+        <td><span class="p1">P1</span></td>
+        <td>V1.5</td>
+        <td>时间轴任务左滑完成/右滑锁定（当前只有点击切换）；打卡页滑动选择ABC档；下拉刷新数据。</td>
+      </tr>
+      <tr>
+        <td><strong>空状态引导</strong></td>
+        <td><span class="p1">P1</span></td>
+        <td>V1.4</td>
+        <td>各页面空数据时显示引导插画+操作提示（如"还没有目标？点击这里创建你的第一个目标"）。</td>
+      </tr>
+      <tr>
+        <td><strong>搜索功能</strong></td>
+        <td><span class="p2">P2</span></td>
+        <td>V1.5</td>
+        <td>全局搜索（任务/目标/人脉），支持模糊匹配。首屏下拉搜索栏。</td>
+      </tr>
+      <tr>
+        <td><strong>引导教程</strong></td>
+        <td><span class="p2">P2</span></td>
+        <td>V1.5</td>
+        <td>首次使用引导：5步滑动教程，依次介绍首页/NLP/打卡/洞察/设置。完成后不再显示。</td>
+      </tr>
+      <tr>
+        <td><strong>深色模式完善</strong></td>
+        <td><span class="p2">P2</span></td>
+        <td>V1.5</td>
+        <td>当前深色模式CSS变量映射不完整（图表/卡片背景/模态框）。V1.5全面覆盖+跟随系统。</td>
+      </tr>
+      <tr>
+        <td><strong>离线体验优化</strong></td>
+        <td><span class="p2">P2</span></td>
+        <td>V1.5</td>
+        <td>离线时AI功能降级提示（当前静默失败），离线时显示数据最后同步时间。</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ========== 第六章：覆盖率增长目标 ========== -->
+<h2 class="section">六、覆盖率增长目标</h2>
+
+<div class="card">
+  <table>
+    <thead><tr><th style="width:14%">版本</th><th style="width:14%">目标覆盖率</th><th style="width:14%">增幅</th><th>重点提升模块</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>V1.0</strong></td>
+        <td>38.7%</td>
+        <td>—</td>
+        <td>NLP(85%)、正反馈(80%)、系统弹性(75%)</td>
+      </tr>
+      <tr>
+        <td><strong>V1.1</strong></td>
+        <td>55%</td>
+        <td><span class="delta-up">+16.3%</span></td>
+        <td>任务管理(75%)、正反馈(88%)、目标管理(70%)</td>
+      </tr>
+      <tr>
+        <td><strong>V1.2</strong></td>
+        <td>61.4%</td>
+        <td><span class="delta-up">+6.4%</span></td>
+        <td>人脉(68%)、时间轴(70%)、AI分析(65%)</td>
+      </tr>
+      <tr>
+        <td><strong>V1.4</strong></td>
+        <td>75%</td>
+        <td><span class="delta-up">+13.6%</span></td>
+        <td>NLP(95%)、AI分析(82%)、每日复盘(65%)</td>
+      </tr>
+      <tr>
+        <td><strong>V1.5</strong></td>
+        <td>82%</td>
+        <td><span class="delta-up">+7%</span></td>
+        <td>通知(78%)、个性化(80%)、NLP(97%)</td>
+      </tr>
+      <tr>
+        <td><strong>V2.0</strong></td>
+        <td>92%</td>
+        <td><span class="delta-up">+10%</span></td>
+        <td>中枢引擎(70%)、时间轴(90%)、AI分析(90%)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<blockquote>
+<strong>覆盖率策略</strong>：每版本控制增幅在7-16个百分点，避免一次性改动过大导致回归风险。V1.4和V2.0是两个关键跳变点（AI接入+架构重构），其他版本以补全为主。
+</blockquote>
+
+<!-- ========== 第七章：风险评估 ========== -->
+<h2 class="section">七、风险评估与缓解</h2>
+
+<div class="card">
+  <table>
+    <thead><tr><th style="width:20%">风险</th><th style="width:10%">概率</th><th style="width:10%">影响</th><th style="width:28%">缓解措施</th><th style="width:10%">责任人</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>DeepSeek API 不稳定</strong></td>
+        <td>中</td>
+        <td>高</td>
+        <td>双引擎架构保证正则兜底；API调用3次重试；设置页一键关闭AI</td>
+        <td>开发者</td>
+      </tr>
+      <tr>
+        <td><strong>单文件维护失控</strong></td>
+        <td>高</td>
+        <td>高</td>
+        <td>V1.5前控制行数&lt;4500行；V2.0强制组件化；禁止新增超过200行的功能块</td>
+        <td>开发者</td>
+      </tr>
+      <tr>
+        <td><strong>localStorage 溢出</strong></td>
+        <td>中</td>
+        <td>中</td>
+        <td>V1.5增加数据自动清理（90天前自动归档）；V2.0迁移IndexedDB</td>
+        <td>开发者</td>
+      </tr>
+      <tr>
+        <td><strong>AI 成本超预期</strong></td>
+        <td>低</td>
+        <td>中</td>
+        <td>Prompt token优化（目标&lt;300token/次）；本地缓存相似查询；用户可关闭AI</td>
+        <td>用户</td>
+      </tr>
+      <tr>
+        <td><strong>跨浏览器兼容性</strong></td>
+        <td>低</td>
+        <td>低</td>
+        <td>核心功能仅依赖标准Web API；定期在Chrome/Firefox/Safari测试</td>
+        <td>开发者</td>
+      </tr>
+      <tr>
+        <td><strong>用户留存率低</strong></td>
+        <td>中</td>
+        <td>高</td>
+        <td>V1.5通知系统（推送提醒回访）；V1.4 AI复盘（创造每日打开动机）；习惯追踪（利用沉没成本效应）</td>
+        <td>产品</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ========== 第八章：里程碑检查点 ========== -->
+<h2 class="section">八、里程碑检查点</h2>
+
+<div class="card">
+  <table>
+    <thead><tr><th style="width:15%">里程碑</th><th style="width:12%">日期</th><th style="width:10%">版本</th><th>验收标准</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>M1: AI 可用</strong></td>
+        <td>6月10日</td>
+        <td>V1.4</td>
+        <td>DeepSeek API调用成功率&gt;95%；NLP语义解析准确率&gt;80%；AI洞察和复盘可正常生成</td>
+      </tr>
+      <tr>
+        <td><strong>M2: 通知上线</strong></td>
+        <td>6月15日</td>
+        <td>V1.5</td>
+        <td>Notification API权限请求成功率&gt;80%；定时提醒准时触发（误差&lt;1min）</td>
+      </tr>
+      <tr>
+        <td><strong>M3: 覆盖率80%+</strong></td>
+        <td>6月20日</td>
+        <td>V1.5</td>
+        <td>14个模块中至少10个达到70%+覆盖率；零高优先级缺失项</td>
+      </tr>
+      <tr>
+        <td><strong>M4: 架构就绪</strong></td>
+        <td>6月25日</td>
+        <td>V1.9</td>
+        <td>Vite项目搭建完成；至少2个页面迁移至Vue组件；IndexedDB数据层可用</td>
+      </tr>
+      <tr>
+        <td><strong>M5: V2.0 发布</strong></td>
+        <td>7月1日</td>
+        <td>V2.0</td>
+        <td>四大引擎至少2个可用；覆盖率92%+；全模块E2E测试通过；性能达标</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Footer -->
+<div style="text-align:center; margin-top:48px; color:var(--text-weak); font-size:12px;">
+  <p>个人之旅 Product Roadmap v1.4-preview | Generated 2026-06-09</p>
+  <p style="margin-top:4px;">DeepSeek AI-Enhanced | Alpine.js + CSS Variables + localStorage</p>
+</div>
+
+</div>
+</body>
+</html>
