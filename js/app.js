@@ -100,6 +100,8 @@ function app() {
     plantedTrees: [],      // 已种树木列表 [{id, date, duration, mode, time, dead?}]
     treeTotalCount: 0,     // 种树总数
     forestView: 'today',   // 树林视图: 'today' | 'month' | 'year' | 'all'
+    forestPeriod: 'day',   // 3D 森林视图周期: 'day' | 'week' | 'month' | 'year'
+    forestDateOffset: 0,   // 日期偏移量（用于前后翻页）
     treeTooltip: { show: false, x: 0, y: 0, date: '', duration: 0, time: '', dead: false },
 
     // ===== 表单 =====
@@ -3488,6 +3490,177 @@ function app() {
         return this.plantedTrees.filter(t => t.date.startsWith(year));
       }
       return this.plantedTrees;
+    },
+
+    // ===== 3D 等距森林视图 =====
+    setForestPeriod(period) {
+      this.forestPeriod = period;
+      this.forestDateOffset = 0;
+    },
+    forestDatePrev() {
+      this.forestDateOffset--;
+    },
+    forestDateNext() {
+      this.forestDateOffset++;
+    },
+    forestDateTitle() {
+      const now = new Date();
+      const offset = this.forestDateOffset;
+      if (this.forestPeriod === 'day') {
+        const d = new Date(now); d.setDate(d.getDate() + offset);
+        const m = d.getMonth() + 1;
+        return m + '月' + d.getDate() + '日';
+      } else if (this.forestPeriod === 'week') {
+        const d = new Date(now); d.setDate(d.getDate() + offset * 7);
+        const start = new Date(d); start.setDate(start.getDate() - start.getDay());
+        const end = new Date(start); end.setDate(end.getDate() + 6);
+        return (start.getMonth() + 1) + '/' + start.getDate() + ' - ' + (end.getMonth() + 1) + '/' + end.getDate();
+      } else if (this.forestPeriod === 'month') {
+        const d = new Date(now); d.setMonth(d.getMonth() + offset);
+        return d.getFullYear() + '年' + (d.getMonth() + 1) + '月';
+      } else if (this.forestPeriod === 'year') {
+        return (now.getFullYear() + offset) + '年';
+      }
+      return '';
+    },
+    getForest3DTrees() {
+      const now = new Date();
+      const offset = this.forestDateOffset;
+      let filtered = [];
+      if (this.forestPeriod === 'day') {
+        const d = new Date(now); d.setDate(d.getDate() + offset);
+        const dateStr = d.toISOString().slice(0, 10);
+        filtered = this.plantedTrees.filter(t => t.date === dateStr);
+        if (filtered.length === 0) return [];
+        return [{ key: dateStr, type: 'single', label: '', trees: filtered, style: '' }];
+      } else if (this.forestPeriod === 'week') {
+        const d = new Date(now); d.setDate(d.getDate() + offset * 7);
+        const start = new Date(d); start.setDate(start.getDate() - start.getDay());
+        const groups = [];
+        for (let i = 0; i < 7; i++) {
+          const day = new Date(start); day.setDate(day.getDate() + i);
+          const dateStr = day.toISOString().slice(0, 10);
+          const dayTrees = this.plantedTrees.filter(t => t.date === dateStr);
+          if (dayTrees.length > 0) {
+            const dayLabels = ['日', '一', '二', '三', '四', '五', '六'];
+            groups.push({
+              key: dateStr, type: 'week-day', label: dayLabels[i],
+              trees: dayTrees,
+              style: 'flex: ' + Math.max(dayTrees.length, 1) + ';'
+            });
+          }
+        }
+        return groups;
+      } else if (this.forestPeriod === 'month') {
+        const d = new Date(now); d.setMonth(d.getMonth() + offset);
+        const year = d.getFullYear(), month = d.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const groups = [];
+        for (let day = 1; day <= daysInMonth; day += 7) {
+          const weekTrees = [];
+          for (let i = 0; i < 7 && day + i <= daysInMonth; i++) {
+            const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day + i).padStart(2, '0');
+            weekTrees.push(...this.plantedTrees.filter(t => t.date === dateStr));
+          }
+          if (weekTrees.length > 0) {
+            groups.push({
+              key: 'w' + Math.ceil(day / 7), type: 'month-week',
+              label: '第' + Math.ceil(day / 7) + '周',
+              trees: weekTrees,
+              style: 'flex: ' + Math.max(weekTrees.length, 1) + ';'
+            });
+          }
+        }
+        return groups;
+      } else if (this.forestPeriod === 'year') {
+        const year = now.getFullYear() + offset;
+        const groups = [];
+        for (let m = 1; m <= 12; m++) {
+          const monthStr = year + '-' + String(m).padStart(2, '0');
+          const monthTrees = this.plantedTrees.filter(t => t.date.startsWith(monthStr));
+          if (monthTrees.length > 0) {
+            groups.push({
+              key: monthStr, type: 'year-month', label: m + '月',
+              trees: monthTrees,
+              style: 'flex: ' + Math.max(monthTrees.length, 1) + ';'
+            });
+          }
+        }
+        return groups;
+      }
+      return [];
+    },
+    forest3DAliveCount() {
+      const trees = this.getForest3DTrees();
+      return trees.reduce((sum, g) => sum + g.trees.filter(t => !t.dead).length, 0);
+    },
+    forest3DDeadCount() {
+      const trees = this.getForest3DTrees();
+      return trees.reduce((sum, g) => sum + g.trees.filter(t => t.dead).length, 0);
+    },
+    forest3DFocusMinutes() {
+      const trees = this.getForest3DTrees();
+      return trees.reduce((sum, g) => sum + g.trees.reduce((s, t) => s + (t.duration || 0), 0), 0);
+    },
+    forest3DFocusHours() {
+      return Math.floor(this.forest3DFocusMinutes() / 60);
+    },
+    getForestChartBars() {
+      const now = new Date();
+      const offset = this.forestDateOffset;
+      let bars = [];
+      if (this.forestPeriod === 'day') {
+        // 按小时显示
+        const d = new Date(now); d.setDate(d.getDate() + offset);
+        const dateStr = d.toISOString().slice(0, 10);
+        const dayTrees = this.plantedTrees.filter(t => t.date === dateStr);
+        for (let h = 6; h <= 22; h += 2) {
+          const mins = dayTrees
+            .filter(t => {
+              const hour = parseInt(t.time?.split(':')[0] || 0);
+              return hour >= h && hour < h + 2;
+            })
+            .reduce((s, t) => s + (t.duration || 0), 0);
+          bars.push({ label: h + '时', mins: mins });
+        }
+      } else if (this.forestPeriod === 'week') {
+        const d = new Date(now); d.setDate(d.getDate() + offset * 7);
+        const start = new Date(d); start.setDate(start.getDate() - start.getDay());
+        const dayLabels = ['日', '一', '二', '三', '四', '五', '六'];
+        for (let i = 0; i < 7; i++) {
+          const day = new Date(start); day.setDate(day.getDate() + i);
+          const dateStr = day.toISOString().slice(0, 10);
+          const mins = this.plantedTrees
+            .filter(t => t.date === dateStr)
+            .reduce((s, t) => s + (t.duration || 0), 0);
+          bars.push({ label: dayLabels[i], mins: mins });
+        }
+      } else if (this.forestPeriod === 'month') {
+        const d = new Date(now); d.setMonth(d.getMonth() + offset);
+        const year = d.getFullYear(), month = d.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        for (let week = 1; week <= Math.ceil(daysInMonth / 7); week++) {
+          let weekMins = 0;
+          for (let day = (week - 1) * 7 + 1; day <= week * 7 && day <= daysInMonth; day++) {
+            const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+            weekMins += this.plantedTrees
+              .filter(t => t.date === dateStr)
+              .reduce((s, t) => s + (t.duration || 0), 0);
+          }
+          bars.push({ label: 'W' + week, mins: weekMins });
+        }
+      } else if (this.forestPeriod === 'year') {
+        const year = now.getFullYear() + offset;
+        for (let m = 1; m <= 12; m++) {
+          const monthStr = year + '-' + String(m).padStart(2, '0');
+          const mins = this.plantedTrees
+            .filter(t => t.date.startsWith(monthStr))
+            .reduce((s, t) => s + (t.duration || 0), 0);
+          bars.push({ label: m + '月', mins: mins });
+        }
+      }
+      const maxMins = Math.max(...bars.map(b => b.mins), 1);
+      return bars.map(b => ({ label: b.label, pct: Math.round((b.mins / maxMins) * 100) }));
     },
     totalAliveTrees() {
       return this.plantedTrees.filter(t => !t.dead).length;
