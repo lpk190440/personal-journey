@@ -12,19 +12,20 @@
 <link rel="manifest" href="manifest.json">
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="css/style.css?v=202606100100">
-<link rel="stylesheet" href="css/os-launcher.css?v=202606100100">
-<link rel="stylesheet" href="css/ocean-theme.css?v=202606100100">
-<link rel="stylesheet" href="css/irregular-shapes.css?v=202606100100">
+<link rel="stylesheet" href="css/style.css?v=202606100200">
+<link rel="stylesheet" href="css/os-launcher.css?v=202606100200">
+<link rel="stylesheet" href="css/ocean-theme.css?v=202606100200">
+<link rel="stylesheet" href="css/irregular-shapes.css?v=202606100200">
 <!-- OS 核心框架 -->
-<script src="core/registry.js?v=202606100100"></script>
-<script src="core/store.js?v=202606100100"></script>
-<script src="core/graph.js?v=202606100100"></script>
+<script src="core/registry.js?v=202606100200"></script>
+<script src="core/store.js?v=202606100200"></script>
+<script src="core/graph.js?v=202606100200"></script>
 <!-- 模块注册清单 -->
-<script src="core/modules.js?v=202606100100"></script>
+<script src="core/modules.js?v=202606100200"></script>
 <!-- 新增模块 -->
-<script src="modules/lifeplan/module.js?v=202606100100"></script>
-<script src="modules/models/module.js?v=202606100100"></script>
+<script src="modules/lifeplan/module.js?v=202606100200"></script>
+<script src="modules/models/module.js?v=202606100200"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 </head>
 <body x-data="app()">
 
@@ -1114,75 +1115,52 @@
     </div>
     <div class="page-content text-center">
 
-      <!-- ===== 顶部状态条：成功树 & 枯萎树 ===== -->
-      <div class="tree-status-bar" x-show="!pomodoroRunning">
-        <div class="tree-status-item alive">
-          <span class="tree-status-icon">🌳</span>
-          <div class="tree-status-info">
-            <span class="tree-status-count" x-text="totalAliveTrees()"></span>
-            <span class="tree-status-label">存活</span>
-          </div>
-        </div>
-        <div class="tree-status-divider"></div>
-        <div class="tree-status-item dead">
-          <span class="tree-status-icon">🥀</span>
-          <div class="tree-status-info">
-            <span class="tree-status-count" style="color: var(--error-color);" x-text="totalDeadTrees()"></span>
-            <span class="tree-status-label">枯萎</span>
-          </div>
-        </div>
-        <div class="tree-status-divider"></div>
-        <div class="tree-status-item total">
-          <div class="tree-status-info">
-            <span class="tree-status-count" x-text="todayPomodoroMinutes() + 'min'"></span>
-            <span class="tree-status-label">今日专注</span>
-          </div>
-        </div>
-      </div>
+      <!-- ===== 3D 森林主场景（Three.js 渲染） ===== -->
+      <div class="forest-main-3d" x-show="!pomodoroRunning" id="forest3dContainer">
+        <!-- Three.js canvas 会自动注入到这里 -->
+        <canvas id="forest3dCanvas"></canvas>
 
-      <!-- ===== 森林展示区（带天气特效） ===== -->
-      <div class="forest-container" x-show="!pomodoroRunning && plantedTrees.length > 0">
-        <div class="forest-sky">
-          <template x-if="treeTotalCount >= 10"><div class="weather-sun"></div></template>
-          <template x-if="treeTotalCount >= 20">
-            <div class="weather-cloud weather-cloud-1"></div>
-            <div class="weather-cloud weather-cloud-2"></div>
-          </template>
-          <template x-if="treeTotalCount >= 30"><div class="weather-rainbow"></div></template>
-        </div>
-        <div class="forest-ground">
-          <div class="forest-trees">
-            <template x-for="(t, i) in plantedTrees.slice(-20)" :key="i">
-              <span class="tree-emoji" :class="getTreeClass(t)" @mouseenter="showTreeTooltip(t, $event)" @mouseleave="hideTreeTooltip()"
-                x-text="t.dead ? '🥀' : getTreeEmoji(t)" :style="t.dead ? 'filter: grayscale(0.5); opacity: 0.6;' : ''"></span>
-            </template>
+        <!-- 浮层UI: 日/周/月/年 Tab -->
+        <div class="forest-3d-ui-layer">
+          <!-- 日期导航 -->
+          <div class="forest-nav">
+            <button class="forest-nav-btn" @click="forestDatePrev()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <span class="forest-nav-title" x-text="forestDateTitle()"></span>
+            <button class="forest-nav-btn" @click="forestDateNext()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
           </div>
-        </div>
-      </div>
 
-      <!-- Tree Tooltip -->
-      <div class="tree-tooltip" x-show="treeTooltip.show" :style="'top: ' + treeTooltip.y + 'px; left: ' + treeTooltip.x + 'px;'" x-transition>
-        <div class="tree-tooltip-header">
-          <span x-text="treeTooltip.dead ? '🥀 枯萎的树' : getTreeEmoji({duration: treeTooltip.duration}) + ' ' + getTreeName(treeTooltip.duration)"></span>
-          <span class="text-xs text-weak" x-text="treeTooltip.date"></span>
-        </div>
-        <div class="tree-tooltip-body">
-          <div class="tree-tooltip-row">
-            <span>专注时长</span>
-            <span class="text-sm" style="font-weight: 500;" x-text="treeTooltip.duration + ' 分钟'"></span>
+          <!-- 日/周/月/年 切换 Tab -->
+          <div class="forest-period-tabs">
+            <button class="forest-period-tab" :class="{ active: forestPeriod === 'day' }" @click="setForestPeriod('day')">日</button>
+            <button class="forest-period-tab" :class="{ active: forestPeriod === 'week' }" @click="setForestPeriod('week')">周</button>
+            <button class="forest-period-tab" :class="{ active: forestPeriod === 'month' }" @click="setForestPeriod('month')">月</button>
+            <button class="forest-period-tab" :class="{ active: forestPeriod === 'year' }" @click="setForestPeriod('year')">年</button>
           </div>
-          <div class="tree-tooltip-row">
-            <span>完成时间</span>
-            <span class="text-sm" x-text="treeTooltip.time"></span>
+
+          <!-- 底部统计浮层 -->
+          <div class="forest-stats-overlay">
+            <div class="fso-item">
+              <span class="fso-num" x-text="forest3DAliveCount()"></span>
+              <span class="fso-label">存活</span>
+            </div>
+            <div class="fso-divider"></div>
+            <div class="fso-item">
+              <span class="fso-num dead-color" x-text="forest3DDeadCount()"></span>
+              <span class="fso-label">枯萎</span>
+            </div>
+            <div class="fso-divider"></div>
+            <div class="fso-item">
+              <span class="fso-num" x-text="forest3DFocusMinutes() + 'min'"></span>
+              <span class="fso-label">专注</span>
+            </div>
           </div>
-          <div class="tree-tooltip-row" x-show="treeTooltip.dead">
-            <span>状态</span>
-            <span class="text-sm" style="color: var(--error-color);">中途放弃</span>
-          </div>
-          <div class="tree-tooltip-row" x-show="!treeTooltip.dead">
-            <span>状态</span>
-            <span class="text-sm" style="color: var(--success-color);">专注完成 ✓</span>
-          </div>
+
+          <!-- 操作提示 -->
+          <div class="forest-hint">拖拽旋转 · 滚轮缩放</div>
         </div>
       </div>
 
@@ -1263,91 +1241,7 @@
         <button class="btn btn-ghost btn-sm tree-giveup-btn" x-show="pomodoroRunning" @click="stopPomodoro()">放弃这棵树 😢</button>
       </div>
 
-      <!-- ===== 统计面板 ===== -->
-      <div class="tree-stats" x-show="!pomodoroRunning">
-        <div class="tree-stat-item">
-          <span class="tree-stat-num" x-text="todayPomodoros()"></span>
-          <span class="tree-stat-label">今日 🌳</span>
-        </div>
-        <div class="tree-stat-item">
-          <span class="tree-stat-num" x-text="todayPomodoroMinutes() + 'min'"></span>
-          <span class="tree-stat-label">今日专注</span>
-        </div>
-        <div class="tree-stat-item">
-          <span class="tree-stat-num" x-text="totalAliveTrees()"></span>
-          <span class="tree-stat-label">存活树木</span>
-        </div>
-        <div class="tree-stat-item">
-          <span class="tree-stat-num" style="color: var(--error-color);" x-text="totalDeadTrees()"></span>
-          <span class="tree-stat-label">枯萎 🥀</span>
-        </div>
-      </div>
 
-      <!-- ===== 3D 等距森林视图（Forest App 风格） ===== -->
-      <div class="forest-3d-wrapper" x-show="!pomodoroRunning">
-        <!-- 日期导航 -->
-        <div class="forest-nav">
-          <button class="forest-nav-btn" @click="forestDatePrev()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          </button>
-          <span class="forest-nav-title" x-text="forestDateTitle()"></span>
-          <button class="forest-nav-btn" @click="forestDateNext()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-          </button>
-        </div>
-
-        <!-- 日/周/月/年 切换 Tab -->
-        <div class="forest-period-tabs">
-          <button class="forest-period-tab" :class="{ active: forestPeriod === 'day' }" @click="setForestPeriod('day')">日</button>
-          <button class="forest-period-tab" :class="{ active: forestPeriod === 'week' }" @click="setForestPeriod('week')">周</button>
-          <button class="forest-period-tab" :class="{ active: forestPeriod === 'month' }" @click="setForestPeriod('month')">月</button>
-          <button class="forest-period-tab" :class="{ active: forestPeriod === 'year' }" @click="setForestPeriod('year')">年</button>
-        </div>
-
-        <!-- 3D 等距森林场景 -->
-        <div class="forest-3d-scene" :class="'period-' + forestPeriod">
-          <div class="forest-3d-ground">
-            <!-- 草地纹理 -->
-            <div class="forest-3d-grass"></div>
-            <!-- 树木按日期分布 -->
-            <template x-for="(group, idx) in getForest3DTrees()" :key="group.key">
-              <div class="forest-3d-cluster" :class="group.type" :style="group.style">
-                <template x-for="tree in group.trees" :key="tree.id">
-                  <div class="forest-3d-tree" :class="{ dead: tree.dead, 'tree-huge': tree.duration >= 60, 'tree-large': tree.duration >= 45, 'tree-medium': tree.duration >= 25, 'tree-small': tree.duration < 25 }" :title="tree.dead ? '中途放弃 · ' + tree.duration + 'min' : tree.date + ' · ' + tree.duration + 'min'">
-                    <span class="tree-emoji-3d" x-text="tree.dead ? '🥀' : getTreeEmoji(tree)"></span>
-                    <div class="tree-shadow-3d"></div>
-                  </div>
-                </template>
-                <div class="cluster-label" x-show="group.label" x-text="group.label"></div>
-              </div>
-            </template>
-            <!-- 空状态 -->
-            <div class="forest-3d-empty" x-show="getForest3DTrees().length === 0">
-              <span class="empty-seed">🌰</span>
-              <span class="empty-text">还没有种树，开始专注吧！</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 森林底部信息 -->
-        <div class="forest-3d-footer">
-          <div class="forest-3d-stat">
-            <span class="f3s-icon">🌳</span>
-            <span class="f3s-num" x-text="forest3DAliveCount()"></span>
-            <span class="f3s-label">存活</span>
-          </div>
-          <div class="forest-3d-stat">
-            <span class="f3s-icon">🥀</span>
-            <span class="f3s-num" style="color: var(--error-color);" x-text="forest3DDeadCount()"></span>
-            <span class="f3s-label">枯萎</span>
-          </div>
-          <div class="forest-3d-stat">
-            <span class="f3s-icon">⏱️</span>
-            <span class="f3s-num" x-text="forest3DFocusMinutes() + 'min'"></span>
-            <span class="f3s-label">专注</span>
-          </div>
-        </div>
-      </div>
 
       <!-- 专注时间统计图表 -->
       <div class="forest-chart-card" x-show="!pomodoroRunning">
@@ -4078,6 +3972,6 @@
 <!-- 手势导航指示器 -->
 <div class="swipe-indicator" :class="{ visible: swipeHintVisible }" x-text="swipeHintText"></div>
 
-<script src="js/app.js?v=202606100100"></script>
+<script src="js/app.js?v=202606100200"></script>
 </body>
 </html>

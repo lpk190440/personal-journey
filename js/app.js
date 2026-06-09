@@ -609,11 +609,21 @@ function app() {
 
     // ===== 导航增强方法 =====
     navigateTo(targetPage) {
-      if (this.page !== targetPage) {
+      const prevPage = this.page;
+      if (prevPage !== targetPage) {
         this.pageHistory.push(targetPage);
         if (this.pageHistory.length > 20) this.pageHistory.shift();
       }
       this.page = targetPage;
+
+      // 3D 森林生命周期管理
+      if (targetPage === 'pomodoro' && !this.pomodoroRunning) {
+        this.$nextTick(() => {
+          setTimeout(() => this.initForest3D(), 100);
+        });
+      } else if (prevPage === 'pomodoro') {
+        this.destroyForest3D();
+      }
     },
 
     // ===== 启动器方法 =====
@@ -3376,6 +3386,10 @@ function app() {
       }
       this.pomodoroRemaining = this.pomodoroTotal;
       this.saveData();
+      // 番茄钟停止后刷新3D森林
+      this.$nextTick(() => {
+        setTimeout(() => { this.initForest3D(); }, 100);
+      });
     },
     completePomodoro() {
       const durationMin = Math.round(this.pomodoroTotal / 60);
@@ -3407,6 +3421,11 @@ function app() {
 
       // 检查里程碑
       this.checkTreeMilestone();
+
+      // 番茄钟完成后刷新3D森林
+      this.$nextTick(() => {
+        setTimeout(() => { this.initForest3D(); }, 100);
+      });
     },
     todayPomodoros() {
       const today = new Date().toISOString().slice(0, 10);
@@ -3496,12 +3515,15 @@ function app() {
     setForestPeriod(period) {
       this.forestPeriod = period;
       this.forestDateOffset = 0;
+      this.refreshForest3D();
     },
     forestDatePrev() {
       this.forestDateOffset--;
+      this.refreshForest3D();
     },
     forestDateNext() {
       this.forestDateOffset++;
+      this.refreshForest3D();
     },
     forestDateTitle() {
       const now = new Date();
@@ -3682,6 +3704,31 @@ function app() {
     },
     hideTreeTooltip() {
       this.treeTooltip.show = false;
+    },
+
+    // ===== Three.js 3D 森林引擎 =====
+    _forest3d: null, // Three.js 引擎实例
+
+    initForest3D() {
+      const container = document.getElementById('forest3dContainer');
+      if (!container || !window.THREE) return;
+      if (this._forest3d) { this._forest3d.dispose(); }
+
+      this._forest3d = new Forest3DEngine(container);
+      this._forest3d.setTrees(this.getForest3DTrees());
+    },
+
+    refreshForest3D() {
+      if (this._forest3d) {
+        this._forest3d.setTrees(this.getForest3DTrees());
+      }
+    },
+
+    destroyForest3D() {
+      if (this._forest3d) {
+        this._forest3d.dispose();
+        this._forest3d = null;
+      }
     },
 
     // ===== 人脉管理 =====
@@ -5372,40 +5419,635 @@ function app() {
       this.goals = [
         { id: 'g1', type: '年', title: '提升专业能力', kr: ['通过PMP认证', '读完12本专业书籍'], parentId: null, antiGoals: ['不要为了考证牺牲睡眠质量'], ifThen: [], createdAt: now },
         { id: 'g2', type: '季', title: 'Q2完成培训课程', kr: ['学完35学时', '完成3次模拟考'], parentId: 'g1', antiGoals: [], ifThen: [], createdAt: now },
-        { id: 'g3', type: '月', title: '6月冲刺模拟考试', kr: ['模考分数达75%'], parentId: 'g2', antiGoals: [], ifThen: [{ if: '连续3天学习超4小时', then: '第4天启动C档兜底日' }], createdAt: now },
-        { id: 'g4', type: '周', title: '本周完成第8-10章', kr: ['约12学时'], parentId: 'g3', antiGoals: [], ifThen: [], createdAt: now },
       ];
       this.tasks = [
-        { id: 't1', title: '学习第8章风险管理', time: '09:00', duration: 60, tags: ['grow', 'important'], priority: 'high', type: '固定', locked: true, recurring: false, completed: false, date: today, createdAt: now },
-        { id: 't2', title: '回复客户邮件', time: '14:00', duration: 30, tags: ['work'], priority: 'normal', type: '弹性', locked: false, recurring: false, completed: false, date: today, createdAt: now },
-        { id: 't3', title: '每日阅读', time: '21:00', duration: 30, tags: ['grow'], priority: 'normal', type: '固定', locked: false, recurring: true, completed: false, date: today, createdAt: now },
+        { id: 't1', title: '阅读《原则》第三章', date: today, completed: false, priority: 'high', tags: ['grow'], createdAt: now },
       ];
-      this.weeklyHighlights = ['完成了拖延两周的方案撰写', '连续3天完成A档任务', '周三下午主动留白，状态很好'];
+      this.pomodoros = [];
       this.contacts = [
-        { id: 'c1', name: '张明', level: 1, notes: '产品经理', preferences: ['科幻小说', '咖啡'], taboos: ['周一上午'], lastContact: '3天前', birthday: '11-20', createdAt: now },
-        { id: 'c2', name: '李婷', level: 2, notes: '设计师', preferences: ['瑜伽'], taboos: [], lastContact: '2周前', birthday: '', createdAt: now },
+        { id: 'c1', name: '张三', relation: '同事', level: 3, company: '', note: '', tags: ['work'], createdAt: now },
       ];
-      // 生成最近一周的演示打卡数据
-      const d = new Date();
-      this.checkins = [];
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date(d);
-        date.setDate(date.getDate() - i);
-        const ds = date.toISOString().slice(0, 10);
-        if (i > 1) {
-          const grades = ['A','A','B','A','B','C','A'];
-          this.checkins.push({
-            id: 'ch' + ds,
-            date: ds,
-            grade: grades[6 - i],
-            note: grades[6 - i] === 'A' ? '状态不错' : grades[6 - i] === 'C' ? '今天有点累' : '',
-            completedTasks: Math.floor(Math.random() * 5) + 1,
-            totalTasks: Math.floor(Math.random() * 3) + 3,
-            createdAt: date.toISOString(),
-          });
-        }
-      }
+      this.checkins = [{ date: today, grade: 'B' }];
+      this.weeklyHighlights = ['完成了第一个番茄钟！'];
+      this.habits = [{ id: 'h1', name: '阅读', icon: '📖', logs: {}, createdAt: now }];
+      this.journals = [{ date: today, mood: 'neutral', content: '第一天使用个人之旅，感觉不错。', gratitude: '' }];
+      this.plantedTrees = [];
+      this.treeTotalCount = 0;
       this.saveData();
+      this.showToast('演示数据已加载（可删除）', 'success');
+    },
+
+    // ===== Alpine 初始化回调 =====
+    init() {
+      this.loadData();
+      this.loadProfileInfo();
+      this.loadSearchHistory();
+      this.loadJournalDraft();
+      this.startTaskReminderTimer();
+      this.initGlobalBack();
+      this.initSwipeNav();
+
+      // 3D 森林在切换到 pomodoro 页面时初始化
     },
   };
+}
+
+// ===== Three.js 3D 森林引擎 =====
+class Forest3DEngine {
+  constructor(container) {
+    this.container = container;
+    this.canvas = container.querySelector('canvas');
+    if (!this.canvas) return;
+
+    this.scene = null;
+    this.camera = null;
+    this.renderer = null;
+    this.controls = null;
+    this.trees = [];
+    this.ground = null;
+    this.clouds = [];
+    this.butterflies = [];
+    this.raycaster = new THREE.Raycaster();
+    this.mouse = new THREE.Vector2();
+    this.isDragging = false;
+    this.lastMouse = { x: 0, y: 0 };
+    this.cameraAngle = { theta: 0.6, phi: 0.8 };
+    this.cameraDistance = 18;
+    this.targetDistance = 18;
+    this.treeMeshes = [];
+    this.hoveredTree = null;
+    this.tooltipEl = null;
+
+    this.init();
+  }
+
+  init() {
+    const w = this.container.clientWidth;
+    const h = this.container.clientHeight;
+
+    // Scene
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x87CEEB);
+    this.scene.fog = new THREE.Fog(0x87CEEB, 20, 60);
+
+    // Camera
+    this.camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 200);
+    this.updateCameraPosition();
+
+    // Renderer
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true });
+    this.renderer.setSize(w, h);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMappingExposure = 1.1;
+
+    // Lighting
+    this.setupLighting();
+
+    // Ground
+    this.createGround();
+
+    // Events
+    this.bindEvents();
+
+    // Animation loop
+    this.animate();
+  }
+
+  setupLighting() {
+    // Ambient
+    const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+    this.scene.add(ambient);
+
+    // Hemisphere (sky/ground)
+    const hemi = new THREE.HemisphereLight(0x87CEEB, 0x4a7c3a, 0.5);
+    this.scene.add(hemi);
+
+    // Directional sun
+    const sun = new THREE.DirectionalLight(0xfff5e0, 1.2);
+    sun.position.set(15, 25, 10);
+    sun.castShadow = true;
+    sun.shadow.mapSize.width = 2048;
+    sun.shadow.mapSize.height = 2048;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 80;
+    sun.shadow.camera.left = -25;
+    sun.shadow.camera.right = 25;
+    sun.shadow.camera.top = 25;
+    sun.shadow.camera.bottom = -25;
+    sun.shadow.bias = -0.0005;
+    this.scene.add(sun);
+
+    // Rim light
+    const rim = new THREE.DirectionalLight(0xa8d5ba, 0.3);
+    rim.position.set(-10, 8, -10);
+    this.scene.add(rim);
+  }
+
+  createGround() {
+    // Main ground plane
+    const geo = new THREE.CircleGeometry(40, 64);
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x5a9e3a,
+      roughness: 0.9,
+      metalness: 0.0,
+    });
+    this.ground = new THREE.Mesh(geo, mat);
+    this.ground.rotation.x = -Math.PI / 2;
+    this.ground.receiveShadow = true;
+    this.scene.add(this.ground);
+
+    // Grass tufts (instanced for performance)
+    this.createGrassTufts();
+
+    // Small hills
+    this.createHills();
+
+    // Decorative rocks
+    this.createRocks();
+
+    // Clouds
+    this.createClouds();
+
+    // Butterflies
+    this.createButterflies();
+  }
+
+  createGrassTufts() {
+    const tuftGeo = new THREE.ConeGeometry(0.08, 0.25, 4);
+    const tuftMat = new THREE.MeshStandardMaterial({ color: 0x6ab04a, roughness: 0.8 });
+    const count = 300;
+    const mesh = new THREE.InstancedMesh(tuftGeo, tuftMat, count);
+    mesh.receiveShadow = true;
+    mesh.castShadow = true;
+
+    const dummy = new THREE.Object3D();
+    for (let i = 0; i < count; i++) {
+      const r = Math.random() * 18;
+      const a = Math.random() * Math.PI * 2;
+      dummy.position.set(Math.cos(a) * r, 0.12, Math.sin(a) * r);
+      dummy.rotation.y = Math.random() * Math.PI;
+      dummy.scale.setScalar(0.5 + Math.random() * 1.0);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+    }
+    this.scene.add(mesh);
+  }
+
+  createHills() {
+    const hillGeo = new THREE.SphereGeometry(4, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+    const hillMat = new THREE.MeshStandardMaterial({ color: 0x4a8c2a, roughness: 0.95 });
+
+    const hills = [
+      { x: -12, z: -8, s: 1.2 },
+      { x: 14, z: -6, s: 0.9 },
+      { x: -6, z: 12, s: 1.0 },
+      { x: 10, z: 10, s: 0.7 },
+    ];
+
+    hills.forEach(h => {
+      const mesh = new THREE.Mesh(hillGeo, hillMat);
+      mesh.position.set(h.x, -3.5, h.z);
+      mesh.scale.set(h.s * 2, h.s * 1.5, h.s * 2);
+      mesh.receiveShadow = true;
+      this.scene.add(mesh);
+    });
+  }
+
+  createRocks() {
+    const rockGeo = new THREE.DodecahedronGeometry(0.3, 0);
+    const rockMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.7, metalness: 0.1 });
+
+    for (let i = 0; i < 8; i++) {
+      const r = 3 + Math.random() * 12;
+      const a = Math.random() * Math.PI * 2;
+      const mesh = new THREE.Mesh(rockGeo, rockMat);
+      mesh.position.set(Math.cos(a) * r, 0.15, Math.sin(a) * r);
+      mesh.scale.setScalar(0.5 + Math.random() * 0.8);
+      mesh.rotation.set(Math.random(), Math.random(), Math.random());
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      this.scene.add(mesh);
+    }
+  }
+
+  createClouds() {
+    const cloudGeo = new THREE.SphereGeometry(1, 16, 12);
+    const cloudMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0.7,
+      roughness: 1,
+    });
+
+    for (let i = 0; i < 5; i++) {
+      const group = new THREE.Group();
+      const blobs = 3 + Math.floor(Math.random() * 3);
+      for (let j = 0; j < blobs; j++) {
+        const mesh = new THREE.Mesh(cloudGeo, cloudMat);
+        mesh.position.set(
+          (Math.random() - 0.5) * 2.5,
+          (Math.random() - 0.5) * 0.5,
+          (Math.random() - 0.5) * 1.5
+        );
+        mesh.scale.setScalar(0.6 + Math.random() * 0.6);
+        group.add(mesh);
+      }
+      group.position.set(
+        (Math.random() - 0.5) * 30,
+        12 + Math.random() * 5,
+        (Math.random() - 0.5) * 20
+      );
+      group.userData.speed = 0.005 + Math.random() * 0.01;
+      this.clouds.push(group);
+      this.scene.add(group);
+    }
+  }
+
+  createButterflies() {
+    const wingGeo = new THREE.PlaneGeometry(0.15, 0.1);
+    const wingMat = new THREE.MeshStandardMaterial({
+      color: 0xffd700,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.8,
+    });
+
+    for (let i = 0; i < 6; i++) {
+      const b = new THREE.Group();
+      const leftWing = new THREE.Mesh(wingGeo, wingMat);
+      leftWing.position.x = -0.08;
+      const rightWing = new THREE.Mesh(wingGeo, wingMat);
+      rightWing.position.x = 0.08;
+      b.add(leftWing, rightWing);
+
+      b.position.set(
+        (Math.random() - 0.5) * 10,
+        1 + Math.random() * 2,
+        (Math.random() - 0.5) * 10
+      );
+      b.userData = {
+        leftWing, rightWing,
+        basePos: b.position.clone(),
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.5 + Math.random() * 0.5,
+      };
+      this.butterflies.push(b);
+      this.scene.add(b);
+    }
+  }
+
+  // ===== Tree Models =====
+  createTreeModel(treeData, x, z) {
+    const group = new THREE.Group();
+    const duration = treeData.duration || 25;
+    const isDead = treeData.dead;
+
+    // Size based on duration
+    let scale = 0.6;
+    if (duration >= 60) scale = 1.4;
+    else if (duration >= 45) scale = 1.15;
+    else if (duration >= 25) scale = 0.9;
+
+    // Trunk
+    const trunkH = 0.8 * scale;
+    const trunkR = 0.08 * scale;
+    const trunkGeo = new THREE.CylinderGeometry(trunkR * 0.7, trunkR, trunkH, 8);
+    const trunkColor = isDead ? 0x6b5b4f : 0x8B6914;
+    const trunkMat = new THREE.MeshStandardMaterial({ color: trunkColor, roughness: 0.9 });
+    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.y = trunkH / 2;
+    trunk.castShadow = true;
+    group.add(trunk);
+
+    // Foliage layers
+    const foliageColors = isDead
+      ? [0x8b7355, 0x7a6b4f, 0x6b5b3f]
+      : [0x4CAF50, 0x66BB6A, 0x81C784];
+
+    const layers = 3;
+    for (let i = 0; i < layers; i++) {
+      const r = (0.5 - i * 0.12) * scale;
+      const h = (0.5 - i * 0.05) * scale;
+      const coneGeo = new THREE.ConeGeometry(r, h, 8);
+      const coneMat = new THREE.MeshStandardMaterial({
+        color: foliageColors[i],
+        roughness: 0.7,
+        metalness: 0.0,
+      });
+      const cone = new THREE.Mesh(coneGeo, coneMat);
+      cone.position.y = trunkH + i * h * 0.55;
+      cone.castShadow = true;
+      cone.receiveShadow = true;
+      group.add(cone);
+    }
+
+    // Shadow blob on ground
+    const shadowGeo = new THREE.CircleGeometry(0.4 * scale, 16);
+    const shadowMat = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 });
+    const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+    shadow.rotation.x = -Math.PI / 2;
+    shadow.position.y = 0.01;
+    group.add(shadow);
+
+    // Position
+    group.position.set(x, 0, z);
+
+    // Gentle sway animation data
+    group.userData = {
+      treeData,
+      swayPhase: Math.random() * Math.PI * 2,
+      swaySpeed: 0.3 + Math.random() * 0.4,
+      baseRotation: group.rotation.clone(),
+    };
+
+    return group;
+  }
+
+  createDeadTreeModel(treeData, x, z) {
+    const group = new THREE.Group();
+    const scale = 0.7;
+
+    // Bent trunk
+    const trunkGeo = new THREE.CylinderGeometry(0.04 * scale, 0.07 * scale, 0.6 * scale, 6);
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a4a3a, roughness: 0.95 });
+    const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+    trunk.position.y = 0.3 * scale;
+    trunk.rotation.z = 0.3;
+    trunk.castShadow = true;
+    group.add(trunk);
+
+    // Dried leaves (small brown spheres)
+    for (let i = 0; i < 3; i++) {
+      const leafGeo = new THREE.SphereGeometry(0.06 * scale, 6, 6);
+      const leafMat = new THREE.MeshStandardMaterial({ color: 0x8b7355, roughness: 0.9 });
+      const leaf = new THREE.Mesh(leafGeo, leafMat);
+      leaf.position.set(
+        (Math.random() - 0.5) * 0.2,
+        0.5 * scale + Math.random() * 0.15,
+        (Math.random() - 0.5) * 0.2
+      );
+      group.add(leaf);
+    }
+
+    group.position.set(x, 0, z);
+    group.userData = { treeData, isDead: true };
+    return group;
+  }
+
+  // ===== Set Trees =====
+  setTrees(treeGroups) {
+    // Remove old trees
+    this.treeMeshes.forEach(m => this.scene.remove(m));
+    this.treeMeshes = [];
+
+    if (!treeGroups || treeGroups.length === 0) {
+      // Empty state - show a seedling
+      this.createEmptyState();
+      return;
+    }
+
+    // Flatten all trees and position them
+    const allTrees = [];
+    treeGroups.forEach(g => {
+      g.trees.forEach(t => allTrees.push(t));
+    });
+
+    // Arrange in a natural cluster pattern
+    const count = allTrees.length;
+    const radius = Math.min(8, Math.sqrt(count) * 1.2);
+
+    allTrees.forEach((tree, i) => {
+      // Spiral / golden angle distribution for natural look
+      const goldenAngle = Math.PI * (3 - Math.sqrt(5));
+      const r = radius * Math.sqrt(i / Math.max(count, 1));
+      const theta = i * goldenAngle;
+      const x = Math.cos(theta) * r + (Math.random() - 0.5) * 0.5;
+      const z = Math.sin(theta) * r + (Math.random() - 0.5) * 0.5;
+
+      const model = tree.dead
+        ? this.createDeadTreeModel(tree, x, z)
+        : this.createTreeModel(tree, x, z);
+
+      this.scene.add(model);
+      this.treeMeshes.push(model);
+    });
+  }
+
+  createEmptyState() {
+    // Small seedling in center
+    const seedGeo = new THREE.SphereGeometry(0.08, 8, 8);
+    const seedMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.6 });
+    const seed = new THREE.Mesh(seedGeo, seedMat);
+    seed.position.y = 0.08;
+    seed.castShadow = true;
+
+    // Tiny sprout
+    const sproutGeo = new THREE.ConeGeometry(0.04, 0.15, 6);
+    const sproutMat = new THREE.MeshStandardMaterial({ color: 0x90EE90, roughness: 0.7 });
+    const sprout = new THREE.Mesh(sproutGeo, sproutMat);
+    sprout.position.y = 0.2;
+    sprout.castShadow = true;
+
+    const group = new THREE.Group();
+    group.add(seed, sprout);
+    group.userData = { isEmptyState: true, swayPhase: 0, swaySpeed: 1 };
+    this.scene.add(group);
+    this.treeMeshes.push(group);
+  }
+
+  // ===== Camera =====
+  updateCameraPosition() {
+    const { theta, phi } = this.cameraAngle;
+    const d = this.cameraDistance;
+    this.camera.position.set(
+      d * Math.sin(phi) * Math.cos(theta),
+      d * Math.cos(phi),
+      d * Math.sin(phi) * Math.sin(theta)
+    );
+    this.camera.lookAt(0, 1, 0);
+  }
+
+  // ===== Events =====
+  bindEvents() {
+    const canvas = this.canvas;
+
+    // Mouse drag to rotate
+    canvas.addEventListener('mousedown', (e) => {
+      this.isDragging = true;
+      this.lastMouse = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!this.isDragging) {
+        // Hover detection
+        this.updateHover(e);
+        return;
+      }
+      const dx = e.clientX - this.lastMouse.x;
+      const dy = e.clientY - this.lastMouse.y;
+      this.cameraAngle.theta -= dx * 0.008;
+      this.cameraAngle.phi = Math.max(0.2, Math.min(Math.PI / 2 - 0.1, this.cameraAngle.phi + dy * 0.008));
+      this.lastMouse = { x: e.clientX, y: e.clientY };
+    });
+
+    window.addEventListener('mouseup', () => { this.isDragging = false; });
+
+    // Wheel to zoom
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      this.targetDistance = Math.max(5, Math.min(40, this.targetDistance + e.deltaY * 0.02));
+    }, { passive: false });
+
+    // Touch support
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        this.isDragging = true;
+        this.lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    }, { passive: true });
+
+    canvas.addEventListener('touchmove', (e) => {
+      if (!this.isDragging || e.touches.length !== 1) return;
+      const dx = e.touches[0].clientX - this.lastMouse.x;
+      const dy = e.touches[0].clientY - this.lastMouse.y;
+      this.cameraAngle.theta -= dx * 0.008;
+      this.cameraAngle.phi = Math.max(0.2, Math.min(Math.PI / 2 - 0.1, this.cameraAngle.phi + dy * 0.008));
+      this.lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    }, { passive: true });
+
+    canvas.addEventListener('touchend', () => { this.isDragging = false; });
+
+    // Resize
+    this._resizeHandler = () => this.onResize();
+    window.addEventListener('resize', this._resizeHandler);
+  }
+
+  updateHover(e) {
+    const rect = this.canvas.getBoundingClientRect();
+    this.mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+
+    // Collect all tree mesh children
+    const targets = [];
+    this.treeMeshes.forEach(g => {
+      g.traverse(child => {
+        if (child.isMesh) targets.push(child);
+      });
+    });
+
+    const intersects = this.raycaster.intersectObjects(targets);
+    if (intersects.length > 0) {
+      const hit = intersects[0].object;
+      let group = hit.parent;
+      while (group && !group.userData.treeData && !group.userData.isEmptyState) {
+        group = group.parent;
+      }
+      if (group && group.userData.treeData) {
+        this.showTooltip(group.userData.treeData, e.clientX, e.clientY);
+        this.hoveredTree = group;
+        document.body.style.cursor = 'pointer';
+        return;
+      }
+    }
+    this.hideTooltip();
+    this.hoveredTree = null;
+    document.body.style.cursor = '';
+  }
+
+  showTooltip(treeData, x, y) {
+    if (!this.tooltipEl) {
+      this.tooltipEl = document.createElement('div');
+      this.tooltipEl.className = 'tree-3d-tooltip';
+      this.tooltipEl.style.cssText = 'position:fixed;z-index:300;background:rgba(255,255,255,0.92);backdrop-filter:blur(12px);border-radius:10px;padding:10px 14px;box-shadow:0 8px 32px rgba(0,0,0,0.15);border:0.5px solid rgba(0,0,0,0.08);font-size:12px;pointer-events:none;transition:opacity 0.15s;min-width:140px;';
+      document.body.appendChild(this.tooltipEl);
+    }
+    const status = treeData.dead ? '<span style="color:#C62828">中途放弃</span>' : '<span style="color:#2E7D32">专注完成</span>';
+    this.tooltipEl.innerHTML = `
+      <div style="font-weight:600;margin-bottom:4px;color:#333">${treeData.date || ''}</div>
+      <div style="color:#666;margin-bottom:2px">专注时长: <b>${treeData.duration || 0}分钟</b></div>
+      <div>${status}</div>
+    `;
+    this.tooltipEl.style.left = (x + 12) + 'px';
+    this.tooltipEl.style.top = (y - 12) + 'px';
+    this.tooltipEl.style.opacity = '1';
+  }
+
+  hideTooltip() {
+    if (this.tooltipEl) this.tooltipEl.style.opacity = '0';
+  }
+
+  onResize() {
+    const w = this.container.clientWidth;
+    const h = this.container.clientHeight;
+    this.camera.aspect = w / h;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(w, h);
+  }
+
+  // ===== Animation =====
+  animate() {
+    if (!this.renderer) return;
+    this._animationId = requestAnimationFrame(() => this.animate());
+
+    const time = Date.now() * 0.001;
+
+    // Smooth zoom
+    this.cameraDistance += (this.targetDistance - this.cameraDistance) * 0.08;
+    this.updateCameraPosition();
+
+    // Tree sway
+    this.treeMeshes.forEach(tree => {
+      const ud = tree.userData;
+      if (ud.swayPhase !== undefined) {
+        const sway = Math.sin(time * ud.swaySpeed + ud.swayPhase) * 0.03;
+        tree.rotation.z = sway;
+        tree.rotation.x = sway * 0.5;
+      }
+      // Hover scale
+      if (this.hoveredTree === tree) {
+        const targetScale = 1.15;
+        tree.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+      } else {
+        tree.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
+      }
+    });
+
+    // Cloud drift
+    this.clouds.forEach(cloud => {
+      cloud.position.x += cloud.userData.speed;
+      if (cloud.position.x > 25) cloud.position.x = -25;
+    });
+
+    // Butterflies
+    this.butterflies.forEach(b => {
+      const ud = b.userData;
+      const t = time * ud.speed + ud.phase;
+      b.position.x = ud.basePos.x + Math.sin(t) * 2;
+      b.position.y = ud.basePos.y + Math.sin(t * 1.5) * 0.5;
+      b.position.z = ud.basePos.z + Math.cos(t) * 2;
+      // Wing flap
+      const flap = Math.sin(time * 15 + ud.phase);
+      ud.leftWing.rotation.y = flap * 0.6;
+      ud.rightWing.rotation.y = -flap * 0.6;
+    });
+
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  dispose() {
+    if (this._animationId) cancelAnimationFrame(this._animationId);
+    if (this._resizeHandler) window.removeEventListener('resize', this._resizeHandler);
+    if (this.tooltipEl) { this.tooltipEl.remove(); this.tooltipEl = null; }
+    if (this.renderer) {
+      this.renderer.dispose();
+      this.renderer = null;
+    }
+    this.scene = null;
+    this.camera = null;
+  }
 }
