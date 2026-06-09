@@ -1428,6 +1428,36 @@ function app() {
     loadAuth() {
       try {
         const authData = JSON.parse(localStorage.getItem('pj_auth') || '{}');
+        const sessionToken = localStorage.getItem('pj_session');
+
+        // 优先尝试恢复会话（sessionToken 存在即视为已登录，无需重新输入密码）
+        if (authData.currentUser && sessionToken) {
+          const user = authData.users?.[authData.currentUser];
+          if (user) {
+            // 验证会话是否过期（7天）
+            const sessionData = JSON.parse(sessionToken);
+            const now = Date.now();
+            const sessionAge = now - (sessionData.createdAt || 0);
+            const SESSION_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7天
+
+            if (sessionAge < SESSION_MAX_AGE && sessionData.username === user.username) {
+              this.authUser = { username: user.username, remember: true };
+              this.authState = 'active';
+              this.authForm.username = user.username;
+              // 刷新会话时间
+              localStorage.setItem('pj_session', JSON.stringify({
+                username: user.username,
+                createdAt: now
+              }));
+              return;
+            } else {
+              // 会话过期，清除
+              localStorage.removeItem('pj_session');
+            }
+          }
+        }
+
+        // 降级：仅 currentUser 标记（旧逻辑兼容）
         if (authData.currentUser) {
           const user = authData.users?.[authData.currentUser];
           if (user) {
@@ -1436,9 +1466,15 @@ function app() {
             if (user.remember) {
               this.authForm.username = user.username;
             }
+            // 为新会话创建 token
+            localStorage.setItem('pj_session', JSON.stringify({
+              username: user.username,
+              createdAt: Date.now()
+            }));
             return;
           }
         }
+
         // 如果没有用户数据但已有个人数据，允许免登录访问（向后兼容）
         const existingData = localStorage.getItem('personal_journey');
         if (existingData && existingData.length > 10) {
@@ -1560,6 +1596,12 @@ function app() {
         authData.currentUser = username;
         localStorage.setItem('pj_auth', JSON.stringify(authData));
 
+        // 创建会话 token（支持免密自动登录）
+        localStorage.setItem('pj_session', JSON.stringify({
+          username: username,
+          createdAt: Date.now()
+        }));
+
         this.authUser = { username, remember };
         this.authState = 'active';
         this.authForm.password = '';
@@ -1625,6 +1667,8 @@ function app() {
       const authData = JSON.parse(localStorage.getItem('pj_auth') || '{}');
       delete authData.currentUser;
       localStorage.setItem('pj_auth', JSON.stringify(authData));
+      // 清除会话 token
+      localStorage.removeItem('pj_session');
     },
 
     async authResetPassword() {
@@ -3630,9 +3674,11 @@ function app() {
     getForestChartBars() {
       const now = new Date();
       const offset = this.forestDateOffset;
+      // 每天总时长基准：24小时 = 1440分钟（用于计算百分比）
+      const DAY_TOTAL_MINS = 1440;
       let bars = [];
       if (this.forestPeriod === 'day') {
-        // 按小时显示
+        // 按小时显示 — 每个时段占当天总时长的百分比
         const d = new Date(now); d.setDate(d.getDate() + offset);
         const dateStr = d.toISOString().slice(0, 10);
         const dayTrees = this.plantedTrees.filter(t => t.date === dateStr);
@@ -3643,7 +3689,8 @@ function app() {
               return hour >= h && hour < h + 2;
             })
             .reduce((s, t) => s + (t.duration || 0), 0);
-          bars.push({ label: h + '时', mins: mins });
+          // 每个时段占全天总时长的百分比（每段2小时=120分钟）
+          bars.push({ label: h + '时', mins: mins, pct: Math.round((mins / DAY_TOTAL_MINS) * 100) });
         }
       } else if (this.forestPeriod === 'week') {
         const d = new Date(now); d.setDate(d.getDate() + offset * 7);
@@ -3652,10 +3699,18 @@ function app() {
         for (let i = 0; i < 7; i++) {
           const day = new Date(start); day.setDate(day.getDate() + i);
           const dateStr = day.toISOString().slice(0, 10);
+          const isToday = dateStr === now.toISOString().slice(0, 10);
+          // 如果是今天，使用已过去的时间作为总时长基准；否则用全天24小时
+          const totalMinsForDay = isToday ? ((now - new Date(dateStr)) / 60000) : DAY_TOTAL_MINS;
           const mins = this.plantedTrees
             .filter(t => t.date === dateStr)
             .reduce((s, t) => s + (t.duration || 0), 0);
-          bars.push({ label: dayLabels[i], mins: mins });
+          bars.push({
+            label: dayLabels[i],
+            mins: mins,
+            pct: totalMinsForDay > 0 ? Math.round((mins / totalMinsForDay) * 100) : 0,
+            totalBase: totalMinsForDay
+          });
         }
       } else if (this.forestPeriod === 'month') {
         const d = new Date(now); d.setMonth(d.getMonth() + offset);
@@ -3669,7 +3724,9 @@ function app() {
               .filter(t => t.date === dateStr)
               .reduce((s, t) => s + (t.duration || 0), 0);
           }
-          bars.push({ label: 'W' + week, mins: weekMins });
+          // 一周总时长基准 = 7天 × 1440分钟 = 10080分钟
+          const WEEK_TOTAL_MINS = 10080;
+          bars.push({ label: 'W' + week, mins: weekMins, pct: Math.round((weekMins / WEEK_TOTAL_MINS) * 100) });
         }
       } else if (this.forestPeriod === 'year') {
         const year = now.getFullYear() + offset;
@@ -3678,11 +3735,12 @@ function app() {
           const mins = this.plantedTrees
             .filter(t => t.date.startsWith(monthStr))
             .reduce((s, t) => s + (t.duration || 0), 0);
-          bars.push({ label: m + '月', mins: mins });
+          // 每月总时长基准 ≈ 30天 × 1440分钟 = 43200分钟
+          const MONTH_TOTAL_MINS = 43200;
+          bars.push({ label: m + '月', mins: mins, pct: Math.round((mins / MONTH_TOTAL_MINS) * 100) });
         }
       }
-      const maxMins = Math.max(...bars.map(b => b.mins), 1);
-      return bars.map(b => ({ label: b.label, pct: Math.round((b.mins / maxMins) * 100) }));
+      return bars;
     },
     totalAliveTrees() {
       return this.plantedTrees.filter(t => !t.dead).length;
@@ -3712,7 +3770,20 @@ function app() {
     initForest3D() {
       const container = document.getElementById('forest3dContainer');
       if (!container || !window.THREE) return;
-      if (this._forest3d) { this._forest3d.dispose(); }
+
+      // 确保完全销毁旧实例（包括清理 window 事件监听器）
+      if (this._forest3d) {
+        this._forest3d.dispose();
+        this._forest3d = null;
+      }
+
+      // 确保 canvas 是干净的（重新创建 canvas 避免事件监听器残留）
+      const oldCanvas = document.getElementById('forest3dCanvas');
+      if (oldCanvas) {
+        const newCanvas = document.createElement('canvas');
+        newCanvas.id = 'forest3dCanvas';
+        oldCanvas.parentNode.replaceChild(newCanvas, oldCanvas);
+      }
 
       this._forest3d = new Forest3DEngine(container);
       this._forest3d.setTrees(this.getForest3DTrees());
@@ -5874,15 +5945,13 @@ class Forest3DEngine {
   bindEvents() {
     const canvas = this.canvas;
 
-    // Mouse drag to rotate
-    canvas.addEventListener('mousedown', (e) => {
+    // Store bound handlers so they can be removed later
+    this._onMouseDown = (e) => {
       this.isDragging = true;
       this.lastMouse = { x: e.clientX, y: e.clientY };
-    });
-
-    window.addEventListener('mousemove', (e) => {
+    };
+    this._onMouseMove = (e) => {
       if (!this.isDragging) {
-        // Hover detection
         this.updateHover(e);
         return;
       }
@@ -5891,37 +5960,37 @@ class Forest3DEngine {
       this.cameraAngle.theta -= dx * 0.008;
       this.cameraAngle.phi = Math.max(0.2, Math.min(Math.PI / 2 - 0.1, this.cameraAngle.phi + dy * 0.008));
       this.lastMouse = { x: e.clientX, y: e.clientY };
-    });
-
-    window.addEventListener('mouseup', () => { this.isDragging = false; });
-
-    // Wheel to zoom
-    canvas.addEventListener('wheel', (e) => {
+    };
+    this._onMouseUp = () => { this.isDragging = false; };
+    this._onWheel = (e) => {
       e.preventDefault();
       this.targetDistance = Math.max(5, Math.min(40, this.targetDistance + e.deltaY * 0.02));
-    }, { passive: false });
-
-    // Touch support
-    canvas.addEventListener('touchstart', (e) => {
+    };
+    this._onTouchStart = (e) => {
       if (e.touches.length === 1) {
         this.isDragging = true;
         this.lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }
-    }, { passive: true });
-
-    canvas.addEventListener('touchmove', (e) => {
+    };
+    this._onTouchMove = (e) => {
       if (!this.isDragging || e.touches.length !== 1) return;
       const dx = e.touches[0].clientX - this.lastMouse.x;
       const dy = e.touches[0].clientY - this.lastMouse.y;
       this.cameraAngle.theta -= dx * 0.008;
       this.cameraAngle.phi = Math.max(0.2, Math.min(Math.PI / 2 - 0.1, this.cameraAngle.phi + dy * 0.008));
       this.lastMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-    }, { passive: true });
-
-    canvas.addEventListener('touchend', () => { this.isDragging = false; });
-
-    // Resize
+    };
+    this._onTouchEnd = () => { this.isDragging = false; };
     this._resizeHandler = () => this.onResize();
+
+    // Attach
+    canvas.addEventListener('mousedown', this._onMouseDown);
+    window.addEventListener('mousemove', this._onMouseMove);
+    window.addEventListener('mouseup', this._onMouseUp);
+    canvas.addEventListener('wheel', this._onWheel, { passive: false });
+    canvas.addEventListener('touchstart', this._onTouchStart, { passive: true });
+    canvas.addEventListener('touchmove', this._onTouchMove, { passive: true });
+    canvas.addEventListener('touchend', this._onTouchEnd);
     window.addEventListener('resize', this._resizeHandler);
   }
 
@@ -6040,13 +6109,39 @@ class Forest3DEngine {
   }
 
   dispose() {
-    if (this._animationId) cancelAnimationFrame(this._animationId);
+    if (this._animationId) {
+      cancelAnimationFrame(this._animationId);
+      this._animationId = null;
+    }
+
+    // Remove all event listeners
+    const canvas = this.canvas;
+    if (canvas) {
+      if (this._onMouseDown) canvas.removeEventListener('mousedown', this._onMouseDown);
+      if (this._onWheel) canvas.removeEventListener('wheel', this._onWheel);
+      if (this._onTouchStart) canvas.removeEventListener('touchstart', this._onTouchStart);
+      if (this._onTouchMove) canvas.removeEventListener('touchmove', this._onTouchMove);
+      if (this._onTouchEnd) canvas.removeEventListener('touchend', this._onTouchEnd);
+    }
+    if (this._onMouseMove) window.removeEventListener('mousemove', this._onMouseMove);
+    if (this._onMouseUp) window.removeEventListener('mouseup', this._onMouseUp);
     if (this._resizeHandler) window.removeEventListener('resize', this._resizeHandler);
+
     if (this.tooltipEl) { this.tooltipEl.remove(); this.tooltipEl = null; }
+
+    // Dispose renderer and release GL context
     if (this.renderer) {
       this.renderer.dispose();
+      // Force context loss to free GPU resources
+      const gl = this.renderer.getContext();
+      if (gl) {
+        const ext = gl.getExtension('WEBGL_lose_context');
+        if (ext) ext.loseContext();
+      }
+      this.renderer.forceContextLoss();
       this.renderer = null;
     }
+
     this.scene = null;
     this.camera = null;
   }

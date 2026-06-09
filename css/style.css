@@ -1912,6 +1912,16 @@
     font-size: 10px; color: var(--text-weak);
     white-space: nowrap;
   }
+  .forest-bar-pct-label {
+    position: absolute; top: 2px; left: 0; right: 0;
+    text-align: center; font-size: 9px; font-weight: 600;
+    color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    pointer-events: none;
+  }
+  .forest-chart-hint {
+    text-align: center; font-size: 10px; color: var(--text-weak);
+    margin-top: 8px; opacity: 0.7;
+  }
   .forest-chart-empty {
     text-align: center; padding: 24px 0;
     font-size: 13px; color: var(--text-weak);

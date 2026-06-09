@@ -12,7 +12,7 @@
 <link rel="manifest" href="manifest.json">
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<link rel="stylesheet" href="css/style.css?v=202606110055">
+<link rel="stylesheet" href="css/style.css?v=202606110100">
 <link rel="stylesheet" href="css/os-launcher.css?v=202606100200">
 <link rel="stylesheet" href="css/ocean-theme.css?v=202606100200">
 <link rel="stylesheet" href="css/irregular-shapes.css?v=202606100200">
@@ -1341,18 +1341,21 @@
       <div class="forest-chart-card" x-show="!pomodoroRunning">
         <div class="forest-chart-title">
           <span>专注时间统计</span>
-          <span class="forest-chart-subtitle" x-text="'累积专注时长：' + forest3DFocusHours() + ' 小时 ' + (forest3DFocusMinutes() % 60) + ' 分钟'"></span>
+          <span class="forest-chart-subtitle" x-text="'累积专注时长：' + forest3DFocusHours() + ' 小时 ' + (forest3DFocusMinutes() % 60) + ' 分钟'" style="font-size:11px;"></span>
         </div>
         <div class="forest-chart-bars">
           <template x-for="bar in getForestChartBars()" :key="bar.label">
             <div class="forest-chart-bar-wrapper">
-              <div class="forest-chart-bar-track">
-                <div class="forest-chart-bar-fill" :style="'height:' + bar.pct + '%'"></div>
+              <div class="forest-chart-bar-track" :title="'专注 ' + bar.mins + ' 分钟 (' + bar.pct + '%)'">
+                <div class="forest-chart-bar-fill" :style="'height:' + Math.max(bar.pct, 2) + '%'"></div>
+                <!-- 柱顶标签 -->
+                <span class="forest-bar-pct-label" x-show="bar.pct >= 5" x-text="bar.pct + '%'"></span>
               </div>
               <span class="forest-chart-bar-label" x-text="bar.label"></span>
             </div>
           </template>
         </div>
+        <div class="forest-chart-hint">柱高 = 占当天总时长的百分比（今天按已过时间计算）</div>
         <div class="forest-chart-empty" x-show="getForestChartBars().length === 0">
           暂无数据，专注后这里会显示统计图表
         </div>
@@ -4066,6 +4069,6 @@
 <!-- 手势导航指示器 -->
 <div class="swipe-indicator" :class="{ visible: swipeHintVisible }" x-text="swipeHintText"></div>
 
-<script src="js/app.js?v=202606110055"></script>
+<script src="js/app.js?v=202606110100"></script>
 </body>
 </html>
