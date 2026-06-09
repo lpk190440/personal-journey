@@ -853,15 +853,34 @@ function app() {
         const deltaX = e.changedTouches[0].clientX - startX;
         const deltaY = e.changedTouches[0].clientY - startY;
         const elapsed = Date.now() - startTime;
-        if (Math.abs(deltaX) > 80 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5 && elapsed < 400) {
-          const currentIdx = pageOrder.indexOf(this.page);
-          if (deltaX < 0 && currentIdx < pageOrder.length - 1) {
-            this.navigateTo(pageOrder[currentIdx + 1]);
-            this.showSwipeHint(pageOrder[currentIdx + 1]);
-          } else if (deltaX > 0 && currentIdx > 0) {
-            this.navigateTo(pageOrder[currentIdx - 1]);
-            this.showSwipeHint(pageOrder[currentIdx - 1]);
+        const absDx = Math.abs(deltaX);
+        const absDy = Math.abs(deltaY);
+
+        // 基本条件：水平滑动为主、滑动距离>60px、快速手势
+        if (absDx < 60 || absDx < absDy * 1.2 || elapsed > 500) return;
+
+        const currentIdx = pageOrder.indexOf(this.page);
+
+        // ── 首页特殊处理：防止左右滑动误触 ──
+        if (this.page === 'home') {
+          // 向左滑动：只有从屏幕右侧 1/3 区域开始，才允许切换到任务
+          if (deltaX < 0) {
+            const startRatio = startX / window.innerWidth;
+            if (startRatio < 0.7) return; // 必须从右侧30%区域开始
+            this.navigateTo('nlp');
+            this.showSwipeHint('nlp');
           }
+          // 首页禁止向右滑动
+          return;
+        }
+
+        // ── 其他页面正常滑动 ──
+        if (deltaX < 0 && currentIdx < pageOrder.length - 1) {
+          this.navigateTo(pageOrder[currentIdx + 1]);
+          this.showSwipeHint(pageOrder[currentIdx + 1]);
+        } else if (deltaX > 0 && currentIdx > 0) {
+          this.navigateTo(pageOrder[currentIdx - 1]);
+          this.showSwipeHint(pageOrder[currentIdx - 1]);
         }
       }, { passive: true });
     },
@@ -1023,8 +1042,9 @@ function app() {
       }
       this.applyDarkMode();
     },
-    toggleDarkMode() {
-      this.darkMode = !this.darkMode;
+    toggleDarkMode(e) {
+      // 使用事件中的 checkbox 状态（避免与 x-model 冲突）
+      this.darkMode = e?.target?.checked ?? !this.darkMode;
       this.applyDarkMode();
       this.saveData();
     },
@@ -1192,6 +1212,19 @@ function app() {
       this.customTheme = null;
       this._injectThemeCSS(preset);
       this.saveData();
+    },
+
+    /** 重命名主题预设（双击/长按触发） */
+    renameThemePreset(key) {
+      const preset = this.themePresets[key];
+      if (!preset) return;
+      const newName = prompt('为主题「' + preset.name + '」输入新名称：', preset.name);
+      if (newName !== null && newName.trim() !== '') {
+        preset.name = newName.trim();
+        // 重新注入以刷新UI
+        this._injectThemeCSS(preset);
+        this.saveData();
+      }
     },
 
     applyCustomTheme() {

@@ -1,0 +1,736 @@
+/**
+ * ╔══════════════════════════════════════════════╗
+ * ║  Irregular Shape UI Component Library        ║
+ * ║  不规则形状 UI 组件库                          ║
+ * ║  兼容 Flat-Green / Ocean / Default 主题       ║
+ * ╚══════════════════════════════════════════════╝
+ *
+ * Usage:
+ *   <link rel="stylesheet" href="irregular-shapes.css">
+ *   <!-- 组件使用 CSS 变量引用当前主题色，自动适配 -->
+ *
+ * Props 设计模式:
+ *   每个组件通过 CSS 自定义属性 (--shape-*) 暴露 Props 接口
+ *   覆盖方式: style="--shape-size: 120px; --shape-color: var(--fg-primary-500);"
+ *
+ * 形状类型:
+ *   1. .shape-blob        — 有机液滴/不规则斑块
+ *   2. .shape-wave        — 波浪分隔线
+ *   3. .shape-hexagon     — 六边形
+ *   4. .shape-diamond     — 菱形
+ *   5. .shape-teardrop    — 水滴形
+ *   6. .shape-star        — 星形 (可调角数)
+ *   7. .shape-crescent    — 月牙形
+ *   8. .shape-chevron     — 箭头/V形装饰
+ *   9. .shape-organic-card — 有机形状卡片容器
+ *   10. .shape-wave-card  — 波浪顶/底卡片
+ *   11. .shape-polygon-frame — 多边形边框装饰
+ *   12. .shape-burst      — 放射状斑点
+ */
+
+/* ================================================================
+   1. PROPS INTERFACE — CSS Custom Properties
+   ================================================================ */
+
+:root {
+  /* ── 尺寸 Props ── */
+  --shape-size: 100px;           /* 主尺寸 */
+  --shape-width: var(--shape-size);
+  --shape-height: var(--shape-size);
+  --shape-radius: var(--radius-lg); /* 圆角参数 */
+
+  /* ── 颜色 Props ── */
+  --shape-color: var(--fg-primary-500, var(--oc-primary-500, #3b82f6));
+  --shape-color-secondary: var(--fg-primary-200, var(--oc-primary-200, #93c5fd));
+  --shape-color-tertiary: var(--fg-primary-100, var(--oc-primary-100, #dbeafe));
+  --shape-color-dark: var(--fg-dark-200, var(--oc-deep-200, #1e293b));
+  --shape-color-surface: var(--fg-surface-card, var(--oc-surface-card, #ffffff));
+
+  /* ── 动画 Props ── */
+  --shape-duration: 8s;
+  --shape-animate: false;        /* 'true' 开启动画 */
+  --shape-rotate: 0deg;
+  --shape-opacity: 1;
+  --shape-blur: 0px;
+
+  /* ── 布局 Props ── */
+  --shape-float-x: 0px;
+  --shape-float-y: 0px;
+  --shape-z-index: auto;
+}
+
+/* ================================================================
+   2. SHARED BASE STYLES
+   ================================================================ */
+
+.shape-base {
+  display: inline-block;
+  position: relative;
+  transition: all var(--duration-normal, 240ms) var(--ease-out, ease);
+}
+
+.shape-base[data-animate="true"],
+.shape-base.animate {
+  animation: shape-float var(--shape-duration, 8s) ease-in-out infinite;
+}
+
+@keyframes shape-float {
+  0%, 100% { transform: translate(0, 0) rotate(var(--shape-rotate, 0deg)); }
+  33%  { transform: translate(4px, -6px) rotate(calc(var(--shape-rotate, 0deg) + 2deg)); }
+  66%  { transform: translate(-3px, 4px) rotate(calc(var(--shape-rotate, 0deg) - 1deg)); }
+}
+
+@keyframes shape-pulse {
+  0%, 100% { transform: scale(1); opacity: var(--shape-opacity, 1); }
+  50%  { transform: scale(1.04); opacity: calc(var(--shape-opacity, 1) * 0.85); }
+}
+
+@keyframes shape-morph {
+  0%, 100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+  50%  { border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%; }
+}
+
+@keyframes wave-drift {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ================================================================
+   3. SHAPE: BLOB — 有机液滴/不规则斑块
+   Props: --shape-size, --shape-color, --shape-animate
+   ================================================================ */
+
+.shape-blob {
+  width: var(--shape-size, 100px);
+  height: var(--shape-size, 100px);
+  background: var(--shape-color);
+  border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  opacity: var(--shape-opacity);
+  filter: blur(var(--shape-blur));
+  position: relative;
+}
+
+.shape-blob[data-animate="true"],
+.shape-blob.animate {
+  animation:
+    shape-float var(--shape-duration, 8s) ease-in-out infinite,
+    shape-morph calc(var(--shape-duration, 8s) * 0.75) ease-in-out infinite alternate;
+}
+
+/* Blob variants */
+.shape-blob--flat {
+  border-radius: 50% 40% 55% 45% / 45% 55% 40% 50%;
+}
+
+.shape-blob--long {
+  border-radius: 40% 60% 45% 55% / 55% 40% 60% 45%;
+  width: calc(var(--shape-size, 100px) * 1.4);
+  height: var(--shape-size, 100px);
+}
+
+.shape-blob--tall {
+  border-radius: 50% 50% 40% 60% / 40% 55% 45% 60%;
+  width: var(--shape-size, 100px);
+  height: calc(var(--shape-size, 100px) * 1.4);
+}
+
+.shape-blob--smooth {
+  border-radius: 45% 55% 50% 50% / 50% 45% 55% 50%;
+}
+
+/* Blob with gradient */
+.shape-blob--gradient {
+  background: linear-gradient(135deg,
+    var(--shape-color),
+    var(--shape-color-secondary)
+  );
+}
+
+/* Blob with stroke */
+.shape-blob--outline {
+  background: transparent;
+  border: 2px solid var(--shape-color);
+}
+
+/* Blob group (layered) */
+.shape-blob-group {
+  position: relative;
+  width: var(--shape-size, 100px);
+  height: var(--shape-size, 100px);
+}
+
+.shape-blob-group .shape-blob {
+  position: absolute;
+}
+
+.shape-blob-group .shape-blob:nth-child(1) {
+  top: 0; left: 10%;
+  --shape-size: 60%;
+  --shape-color: var(--shape-color);
+  opacity: 0.85;
+}
+
+.shape-blob-group .shape-blob:nth-child(2) {
+  bottom: 0; right: 5%;
+  --shape-size: 55%;
+  --shape-color: var(--shape-color-secondary);
+  opacity: 0.7;
+}
+
+.shape-blob-group .shape-blob:nth-child(3) {
+  top: 15%; right: 0;
+  --shape-size: 35%;
+  --shape-color: var(--shape-color-tertiary);
+  opacity: 0.6;
+}
+
+/* ================================================================
+   4. SHAPE: WAVE — 波浪分隔线
+   Props: --shape-color, --shape-height, --shape-animate
+   ================================================================ */
+
+.shape-wave {
+  width: 100%;
+  height: var(--shape-height, 60px);
+  position: relative;
+  overflow: hidden;
+}
+
+.shape-wave::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 200%;
+  height: 100%;
+  background: var(--shape-color);
+  /* SVG wave pattern via mask */
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,60 C200,120 400,0 600,60 C800,120 1000,0 1200,60 L1200,120 L0,120 Z' fill='%23000'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,60 C200,120 400,0 600,60 C800,120 1000,0 1200,60 L1200,120 L0,120 Z' fill='%23000'/%3E%3C/svg%3E");
+  -webkit-mask-size: 50% 100%;
+  mask-size: 50% 100%;
+}
+
+.shape-wave[data-animate="true"]::before,
+.shape-wave.animate::before {
+  animation: wave-drift calc(var(--shape-duration, 8s) * 0.5) linear infinite;
+}
+
+/* Wave variants */
+.shape-wave--top::before {
+  top: 0; bottom: auto;
+  transform: rotate(180deg);
+}
+
+.shape-wave--steep::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,30 C150,120 300,0 450,90 C600,120 750,0 900,60 C1050,120 1200,30 1200,60 L1200,120 L0,120 Z' fill='%23000'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,30 C150,120 300,0 450,90 C600,120 750,0 900,60 C1050,120 1200,30 1200,60 L1200,120 L0,120 Z' fill='%23000'/%3E%3C/svg%3E");
+}
+
+.shape-wave--gentle::before {
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,60 C300,90 600,30 900,60 C1050,75 1150,60 1200,60 L1200,120 L0,120 Z' fill='%23000'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,60 C300,90 600,30 900,60 C1050,75 1150,60 1200,60 L1200,120 L0,120 Z' fill='%23000'/%3E%3C/svg%3E");
+}
+
+.shape-wave--double::after {
+  content: '';
+  position: absolute;
+  bottom: 10px; left: 0;
+  width: 200%; height: 100%;
+  background: var(--shape-color-secondary);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,60 C200,120 400,0 600,60 C800,120 1000,0 1200,60 L1200,120 L0,120 Z' fill='%23000'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,60 C200,120 400,0 600,60 C800,120 1000,0 1200,60 L1200,120 L0,120 Z' fill='%23000'/%3E%3C/svg%3E");
+  -webkit-mask-size: 50% 100%;
+  mask-size: 50% 100%;
+  opacity: 0.5;
+}
+
+/* ================================================================
+   5. SHAPE: HEXAGON — 六边形
+   Props: --shape-size, --shape-color
+   ================================================================ */
+
+.shape-hexagon {
+  width: var(--shape-size, 100px);
+  height: calc(var(--shape-size, 100px) * 0.577);
+  background: var(--shape-color);
+  position: relative;
+  margin: calc(var(--shape-size, 100px) * 0.288) 0;
+  display: inline-block;
+}
+
+.shape-hexagon::before,
+.shape-hexagon::after {
+  content: '';
+  position: absolute;
+  width: 0; height: 0;
+  border-left: calc(var(--shape-size, 100px) / 2) solid transparent;
+  border-right: calc(var(--shape-size, 100px) / 2) solid transparent;
+}
+
+.shape-hexagon::before {
+  bottom: 100%;
+  border-bottom: calc(var(--shape-size, 100px) * 0.288) solid var(--shape-color);
+}
+
+.shape-hexagon::after {
+  top: 100%;
+  border-top: calc(var(--shape-size, 100px) * 0.288) solid var(--shape-color);
+}
+
+/* Hexagon variant: outline only */
+.shape-hexagon--outline {
+  background: transparent;
+  border-left: 2px solid var(--shape-color);
+  border-right: 2px solid var(--shape-color);
+}
+
+.shape-hexagon--outline::before {
+  border-bottom-color: var(--shape-color);
+  /* pseudo-outline via filter hack */
+}
+
+/* Hexagon: clip-path approach (cleaner) */
+.shape-hexagon--clip {
+  width: var(--shape-size, 100px);
+  height: var(--shape-size, 100px);
+  background: var(--shape-color);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+
+/* ================================================================
+   6. SHAPE: DIAMOND — 菱形
+   Props: --shape-size, --shape-color
+   ================================================================ */
+
+.shape-diamond {
+  width: var(--shape-size, 80px);
+  height: var(--shape-size, 80px);
+  background: var(--shape-color);
+  transform: rotate(45deg);
+  display: inline-block;
+}
+
+.shape-diamond--rounded {
+  border-radius: calc(var(--shape-size, 80px) * 0.15);
+}
+
+.shape-diamond--outline {
+  background: transparent;
+  border: 2px solid var(--shape-color);
+}
+
+.shape-diamond--clip {
+  width: var(--shape-size, 100px);
+  height: var(--shape-size, 100px);
+  background: var(--shape-color);
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  transform: none;
+}
+
+/* ================================================================
+   7. SHAPE: TEARDROP — 水滴形
+   Props: --shape-size, --shape-color
+   ================================================================ */
+
+.shape-teardrop {
+  width: var(--shape-size, 80px);
+  height: var(--shape-size, 80px);
+  background: var(--shape-color);
+  border-radius: 0 50% 50% 50%;
+  transform: rotate(45deg);
+  display: inline-block;
+}
+
+.shape-teardrop--clip {
+  width: var(--shape-size, 100px);
+  height: var(--shape-size, 100px);
+  background: var(--shape-color);
+  clip-path: polygon(50% 0%, 100% 35%, 82% 65%, 50% 100%, 18% 65%, 0% 35%);
+  transform: none;
+}
+
+.shape-teardrop--up {
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(45deg);
+}
+
+.shape-teardrop--down {
+  border-radius: 50% 0 50% 50%;
+  transform: rotate(-135deg);
+}
+
+/* ================================================================
+   8. SHAPE: STAR — 星形
+   Props: --shape-size, --shape-color, --shape-points (CSS无法动态, 使用变体)
+   ================================================================ */
+
+.shape-star {
+  width: var(--shape-size, 100px);
+  height: var(--shape-size, 100px);
+  background: var(--shape-color);
+  clip-path: polygon(
+    50% 0%, 61% 35%, 98% 35%, 68% 57%,
+    79% 91%, 50% 70%, 21% 91%, 32% 57%,
+    2% 35%, 39% 35%
+  );
+  display: inline-block;
+}
+
+.shape-star--6pt {
+  clip-path: polygon(
+    50% 0%, 65% 25%, 95% 25%, 75% 50%,
+    85% 80%, 50% 62%, 15% 80%, 25% 50%,
+    5% 25%, 35% 25%
+  );
+}
+
+.shape-star--8pt {
+  clip-path: polygon(
+    50% 0%, 58% 20%, 80% 8%, 72% 30%,
+    95% 28%, 80% 42%, 100% 55%, 80% 58%,
+    85% 78%, 65% 68%, 50% 90%, 38% 72%,
+    15% 82%, 25% 62%, 0% 55%, 22% 42%,
+    5% 28%, 28% 28%, 20% 8%, 42% 20%
+  );
+}
+
+/* ================================================================
+   9. SHAPE: CRESCENT — 月牙形
+   Props: --shape-size, --shape-color
+   ================================================================ */
+
+.shape-crescent {
+  width: var(--shape-size, 80px);
+  height: var(--shape-size, 80px);
+  border-radius: 50%;
+  background: var(--shape-color);
+  position: relative;
+  display: inline-block;
+}
+
+.shape-crescent::after {
+  content: '';
+  position: absolute;
+  top: -10%; right: -15%;
+  width: 80%; height: 80%;
+  border-radius: 50%;
+  background: var(--shape-color-surface);
+}
+
+/* Cleaner crescent via box-shadow */
+.shape-crescent--clean {
+  width: var(--shape-size, 80px);
+  height: var(--shape-size, 80px);
+  border-radius: 50%;
+  background: transparent;
+  box-shadow:
+    inset 12px -4px 0 0 var(--shape-color);
+}
+
+/* ================================================================
+   10. SHAPE: CHEVRON — 箭头/V形装饰
+   Props: --shape-size, --shape-color
+   ================================================================ */
+
+.shape-chevron {
+  width: var(--shape-size, 60px);
+  height: var(--shape-size, 60px);
+  background: transparent;
+  border-right: 3px solid var(--shape-color);
+  border-bottom: 3px solid var(--shape-color);
+  transform: rotate(-45deg);
+  display: inline-block;
+}
+
+.shape-chevron--left  { transform: rotate(135deg); }
+.shape-chevron--up    { transform: rotate(-135deg); }
+.shape-chevron--down  { transform: rotate(45deg); }
+
+/* ================================================================
+   11. SHAPE: ORGANIC CARD — 有机形状卡片
+   Props: --shape-size (width), --shape-color (bg), --shape-radius
+   ================================================================ */
+
+.shape-organic-card {
+  position: relative;
+  width: var(--shape-width, 300px);
+  min-height: var(--shape-height, 200px);
+  background: var(--shape-color-surface);
+  border-radius: var(--shape-radius, var(--radius-lg, 20px));
+  padding: 24px;
+  overflow: visible;
+  border: 1px solid var(--shape-color-secondary);
+  transition: all var(--duration-normal, 240ms) var(--ease-out, ease);
+}
+
+.shape-organic-card:hover {
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0,0,0,.06));
+  transform: translateY(-2px);
+}
+
+/* Organic blob decoration on card */
+.shape-organic-card::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -20px;
+  width: 80px; height: 80px;
+  background: var(--shape-color);
+  border-radius: 60% 40% 55% 45% / 45% 55% 40% 50%;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shape-organic-card::after {
+  content: '';
+  position: absolute;
+  bottom: -15px; left: 15%;
+  width: 50px; height: 50px;
+  background: var(--shape-color-secondary);
+  border-radius: 40% 60% 45% 55% / 55% 40% 60% 45%;
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shape-organic-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Organic card variants */
+.shape-organic-card--blob-left::before {
+  top: 20px; left: -25px; right: auto;
+  width: 60px; height: 60px;
+  opacity: 0.15;
+}
+
+.shape-organic-card--blob-right::before {
+  top: 40%; right: -20px;
+}
+
+.shape-organic-card--no-blobs::before,
+.shape-organic-card--no-blobs::after {
+  display: none;
+}
+
+/* ================================================================
+   12. SHAPE: WAVE CARD — 波浪顶/底卡片
+   Props: --shape-color, --shape-width
+   ================================================================ */
+
+.shape-wave-card {
+  position: relative;
+  width: var(--shape-width, 300px);
+  min-height: var(--shape-height, 200px);
+  background: var(--shape-color-surface);
+  border-radius: var(--radius-lg, 20px);
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid var(--shape-color-secondary);
+}
+
+.shape-wave-card--top-bar,
+.shape-wave-card--bottom-bar {
+  position: relative;
+  padding-top: 40px;
+}
+
+.shape-wave-card--top-bar::before,
+.shape-wave-card--bottom-bar::after {
+  content: '';
+  position: absolute;
+  left: 0; width: 100%; height: 40px;
+  background: var(--shape-color);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,60 C200,120 400,0 600,60 C800,120 1000,0 1200,60 L1200,120 L0,120 Z' fill='%23000'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M0,60 C200,120 400,0 600,60 C800,120 1000,0 1200,60 L1200,120 L0,120 Z' fill='%23000'/%3E%3C/svg%3E");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  opacity: 0.18;
+}
+
+.shape-wave-card--top-bar::before {
+  top: 0;
+}
+
+.shape-wave-card--bottom-bar::after {
+  bottom: 0;
+  transform: rotate(180deg);
+}
+
+/* ================================================================
+   13. SHAPE: POLYGON FRAME — 多边形边框装饰
+   Props: --shape-size, --shape-color
+   ================================================================ */
+
+.shape-polygon-frame {
+  position: relative;
+  width: var(--shape-size, 120px);
+  height: var(--shape-size, 120px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shape-polygon-frame svg {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+
+.shape-polygon-frame__content {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hex frame */
+.shape-polygon-frame--hex svg polygon {
+  fill: var(--shape-color);
+  opacity: 0.12;
+  stroke: var(--shape-color);
+  stroke-width: 2;
+}
+
+/* Triangle frame */
+.shape-polygon-frame--tri svg polygon {
+  fill: var(--shape-color);
+  opacity: 0.1;
+  stroke: var(--shape-color);
+  stroke-width: 2;
+}
+
+/* Pentagon frame */
+.shape-polygon-frame--pent svg polygon {
+  fill: var(--shape-color);
+  opacity: 0.1;
+  stroke: var(--shape-color);
+  stroke-width: 2;
+}
+
+/* ================================================================
+   14. SHAPE: BURST — 放射状斑点装饰
+   Props: --shape-size, --shape-color
+   ================================================================ */
+
+.shape-burst {
+  position: relative;
+  width: var(--shape-size, 60px);
+  height: var(--shape-size, 60px);
+  display: inline-block;
+}
+
+.shape-burst::before {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 100%; height: 100%;
+  background: var(--shape-color);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: var(--shape-opacity, 1);
+}
+
+.shape-burst__dot {
+  position: absolute;
+  width: calc(var(--shape-size, 60px) * 0.2);
+  height: calc(var(--shape-size, 60px) * 0.2);
+  background: var(--shape-color);
+  border-radius: 50%;
+  opacity: 0.4;
+}
+
+/* Burst dots positioned via CSS */
+.shape-burst--4 .shape-burst__dot:nth-child(1) { top: 0;   left: 50%; transform: translateX(-50%); }
+.shape-burst--4 .shape-burst__dot:nth-child(2) { top: 50%; right: 0;  transform: translateY(-50%); }
+.shape-burst--4 .shape-burst__dot:nth-child(3) { bottom: 0; left: 50%; transform: translateX(-50%); }
+.shape-burst--4 .shape-burst__dot:nth-child(4) { top: 50%; left: 0;   transform: translateY(-50%); }
+
+/* ================================================================
+   15. SHAPE: PILL — 胶囊形装饰条
+   Props: --shape-width, --shape-height, --shape-color
+   ================================================================ */
+
+.shape-pill {
+  width: var(--shape-width, 200px);
+  height: var(--shape-height, 12px);
+  background: var(--shape-color);
+  border-radius: 9999px;
+  display: inline-block;
+  opacity: var(--shape-opacity, 1);
+}
+
+.shape-pill--vertical {
+  width: var(--shape-height, 12px);
+  height: var(--shape-width, 200px);
+}
+
+/* ================================================================
+   16. SHAPE: DONUT / RING — 环形装饰
+   Props: --shape-size, --shape-color
+   ================================================================ */
+
+.shape-ring {
+  width: var(--shape-size, 80px);
+  height: var(--shape-size, 80px);
+  border-radius: 50%;
+  border: calc(var(--shape-size, 80px) * 0.15) solid var(--shape-color);
+  background: transparent;
+  display: inline-block;
+}
+
+.shape-ring--dashed {
+  border-style: dashed;
+}
+
+.shape-ring--partial {
+  border-color: var(--shape-color) transparent transparent transparent;
+}
+
+/* ================================================================
+   17. RESPONSIVE HELPERS
+   ================================================================ */
+
+@media (max-width: 640px) {
+  .shape-organic-card {
+    --shape-width: 100%;
+    --shape-height: auto;
+    min-height: 160px;
+  }
+
+  .shape-wave-card {
+    --shape-width: 100%;
+  }
+
+  .shape-blob {
+    --shape-size: 60px;
+  }
+}
+
+/* ================================================================
+   18. LAYOUT UTILITIES
+   ================================================================ */
+
+.shape-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6, 24px);
+  align-items: center;
+  justify-content: center;
+}
+
+.shape-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+}
+
+.shape-overlay {
+  position: absolute;
+  pointer-events: none;
+}
+
+.shape-overlay--tl { top: -10%; left: -5%; }
+.shape-overlay--tr { top: -10%; right: -5%; }
+.shape-overlay--bl { bottom: -10%; left: -5%; }
+.shape-overlay--br { bottom: -10%; right: -5%; }
+.shape-overlay--center { top: 50%; left: 50%; transform: translate(-50%, -50%); }

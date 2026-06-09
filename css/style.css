@@ -255,9 +255,9 @@
   .home-module-item {
     display: flex; flex-direction: column; align-items: center; gap: 6px;
     min-width: 68px; max-width: 80px; padding: 12px 8px 10px;
-    background: var(--card-bg); border-radius: var(--radius-lg);
+    background: var(--card-bg); border-radius: 55% 45% 60% 40% / 40% 55% 45% 60%;
     border: 1px solid var(--border);
-    cursor: pointer; transition: all 0.25s ease;
+    cursor: pointer; transition: all 0.25s ease, border-radius 0.5s ease;
     flex-shrink: 0; scroll-snap-align: start;
     box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     touch-action: pan-x; -webkit-tap-highlight-color: transparent;
@@ -266,17 +266,22 @@
   .home-module-item:hover {
     transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     border-color: var(--accent-light);
+    border-radius: 45% 55% 50% 50% / 55% 45% 55% 45%;
   }
   .home-module-item:active {
     transform: scale(0.94) translateY(0);
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border-radius: 52% 48% 55% 45% / 48% 52% 45% 55%;
   }
   .hmi-icon {
-    width: 40px; height: 40px; border-radius: 12px;
+    width: 40px; height: 40px; border-radius: 60% 40% 55% 45% / 45% 55% 45% 55%;
     display: flex; align-items: center; justify-content: center;
-    transition: transform 0.2s ease;
+    transition: transform 0.2s ease, border-radius 0.4s ease;
   }
   .home-module-item:active .hmi-icon { transform: scale(0.9); }
+  .home-module-item:hover .hmi-icon {
+    border-radius: 45% 55% 40% 60% / 55% 40% 60% 45%;
+  }
   .hmi-label {
     font-size: 11px; font-weight: 500; color: var(--text-primary);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -284,17 +289,17 @@
     letter-spacing: 0.3px;
   }
 
-  /* 滑动指示器（圆点） */
+  /* 滑动指示器（圆点）→ 升级为不规则胶囊 */
   .home-module-dots {
     display: flex; justify-content: center; gap: 6px;
     padding: 4px 0 8px 0; margin-bottom: 4px;
   }
   .hmi-dot {
-    width: 5px; height: 5px; border-radius: 50%;
+    width: 5px; height: 5px; border-radius: 60% 40% 50% 50% / 50% 50% 40% 60%;
     background: var(--border); transition: all 0.3s ease;
   }
   .hmi-dot.active {
-    width: 16px; border-radius: 3px;
+    width: 16px; border-radius: 8px;
     background: var(--accent); opacity: 0.7;
   }
 

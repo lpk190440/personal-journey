@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="css/style.css?v=202606100001">
 <link rel="stylesheet" href="css/os-launcher.css?v=202606100001">
 <link rel="stylesheet" href="css/ocean-theme.css?v=202606100001">
+<link rel="stylesheet" href="css/irregular-shapes.css?v=202606100001">
 <!-- OS 核心框架 -->
 <script src="core/registry.js?v=202606100001"></script>
 <script src="core/store.js?v=202606100001"></script>
@@ -1817,7 +1818,7 @@
         <!-- ===== 主题预设 ===== -->
         <div class="card">
           <div class="card-title">主题配色</div>
-          <p class="text-xs text-secondary" style="margin-bottom: 12px;">选择一套配色方案，即刻预览</p>
+          <p class="text-xs text-secondary" style="margin-bottom: 12px;">选择一套配色方案，长按可编辑名称</p>
           <div class="theme-preset-grid">
             <template x-for="(preset, key) in themePresets" :key="key">
               <div class="theme-preset-card" :class="{ active: themePreset === key }" @click="applyThemePreset(key)">
@@ -1829,7 +1830,11 @@
                 </div>
                 <div class="theme-preset-info">
                   <span class="theme-preset-icon" x-text="preset.icon"></span>
-                  <span class="theme-preset-name" x-text="preset.name"></span>
+                  <span class="theme-preset-name"
+                    x-text="preset.name"
+                    @dblclick.stop="renameThemePreset(key)"
+                    @contextmenu.prevent.stop="renameThemePreset(key)"
+                    :title="'双击重命名'"></span>
                 </div>
                 <span class="theme-preset-check" x-show="themePreset === key">✓</span>
               </div>
@@ -1895,7 +1900,7 @@
           <div class="flex justify-between items-center mt-sm">
             <span class="text-sm text-secondary">跟随系统或手动切换</span>
             <label class="toggle">
-              <input type="checkbox" x-model="darkMode" @change="toggleDarkMode()">
+              <input type="checkbox" x-bind:checked="darkMode" @change="toggleDarkMode()">
               <span class="slider"></span>
             </label>
           </div>
